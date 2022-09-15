@@ -35,7 +35,6 @@ void softmax_regression_epoch_cpp(const float *X, const unsigned char *y,
     /// BEGIN YOUR CODE
     for (int l = 0; l < m; l += batch) {
         int r = std::min(l + batch, m);
-        printf("l = %d, r = %d\n", l, r);
 
         double Iy[(r-l) * k];
         for(int i = l; i < r; ++ i) {
@@ -48,15 +47,14 @@ void softmax_regression_epoch_cpp(const float *X, const unsigned char *y,
         for(int i = l; i < r; ++ i) {
             double sum = 0;
             for(int kk = 0; kk < k; ++ kk) {
-                Z[(i-l)*k+kk] = 0;
+                float tmp = 0;
                 for(int j = 0; j < n; ++ j) {
-//                    printf("%.2f %.2f\n", X[i*n+j], theta[j*k+kk]);
-                    Z[(i-l)*k+kk] += std::exp(X[i*n+j] * theta[j*k+kk]);
+                    tmp += X[i*n+j] * theta[j*k+kk];
                 }
+                Z[(i-l)*k+kk] = std::exp(tmp);
                 sum += Z[(i-l)*k+kk];
             }
             // normalize - Iy
-//            printf("sum = %.2f\n", sum);
             for(int kk = 0; kk < k; ++ kk) {
                 Z[(i-l)*k+kk] /= sum;
                 Z[(i-l)*k+kk] -= Iy[(i-l)*k+kk];
