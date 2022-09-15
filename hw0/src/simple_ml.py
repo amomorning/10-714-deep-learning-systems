@@ -140,7 +140,26 @@ def nn_epoch(X, y, W1, W2, lr=0.1, batch=100):
         None
     """
     ### BEGIN YOUR CODE
-    pass
+    (M, N), (D, K) = X.shape, W2.shape
+
+    def relu(x):
+        return x * (x > 0)
+
+    def normalize(z, n):
+        for i in range(n):
+            z[i] = z[i] / z[i].sum()
+        return z
+
+    num = (M + batch - 1) // batch
+    for i in range(num):
+        l, r = i * batch, min(M, (i + 1) * batch)
+
+        Z1 = relu(X[l:r].dot(W1))
+        Iy = np.eye(K)[y[l:r]]
+        G2 = normalize(np.exp(Z1.dot(W2)), r-l) - Iy
+        G1 = (Z1 > 0) * (G2.dot(W2.transpose()))
+        W1 -= lr/(r-l) * X[l:r].transpose().dot(G1)
+        W2 -= lr/(r-l) * Z1.transpose().dot(G2)
     ### END YOUR CODE
 
 
