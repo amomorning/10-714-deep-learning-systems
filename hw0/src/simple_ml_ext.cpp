@@ -20,9 +20,9 @@ void softmax_regression_epoch_cpp(const float *X, const unsigned char *y,
      *     X (const float *): pointer to X data, of size m*n, stored in row
      *          major (C) format
      *     y (const unsigned char *): pointer to y data, of size m
-     *     theta (foat *): pointer to theta data, of size n*k, stored in row
+     *     theta (float *): pointer to theta data, of size n*k, stored in row
      *          major (C) format
-     *     m (size_t): number of exmaples
+     *     m (size_t): number of examples
      *     n (size_t): input dimension
      *     k (size_t): number of classes
      *     lr (float): learning rate / SGD step size
@@ -33,6 +33,48 @@ void softmax_regression_epoch_cpp(const float *X, const unsigned char *y,
      */
 
     /// BEGIN YOUR CODE
+    for (int l = 0; l < m; l += batch) {
+        int r = std::min(l + batch, m);
+        printf("l = %d, r = %d\n", l, r);
+
+        double Iy[(r-l) * k];
+        for(int i = l; i < r; ++ i) {
+            for(int kk = 0; kk < k; ++ kk) {
+                Iy[(i-l)*k + kk] = (y[i] == kk) ? 1.0 : 0;
+            }
+        }
+
+        float Z[(r-l) * k];
+        for(int i = l; i < r; ++ i) {
+            double sum = 0;
+            for(int kk = 0; kk < k; ++ kk) {
+                Z[(i-l)*k+kk] = 0;
+                for(int j = 0; j < n; ++ j) {
+//                    printf("%.2f %.2f\n", X[i*n+j], theta[j*k+kk]);
+                    Z[(i-l)*k+kk] += std::exp(X[i*n+j] * theta[j*k+kk]);
+                }
+                sum += Z[(i-l)*k+kk];
+            }
+            // normalize - Iy
+//            printf("sum = %.2f\n", sum);
+            for(int kk = 0; kk < k; ++ kk) {
+                Z[(i-l)*k+kk] /= sum;
+                Z[(i-l)*k+kk] -= Iy[(i-l)*k+kk];
+            }
+        }
+
+        for(int j = 0; j < n; ++ j) {
+            for(int kk = 0; kk < k; ++ kk) {
+                double tmp = 0;
+                for(int i = l; i < r; ++ i) {
+                    tmp += X[i*n+j] * Z[(i-l)*k+kk];
+                }
+                theta[j*k+kk] -= lr * tmp / (r-l);
+            }
+        }
+    }
+
+
 
     /// END YOUR CODE
 }

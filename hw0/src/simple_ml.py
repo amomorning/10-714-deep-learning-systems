@@ -107,7 +107,6 @@ def softmax_regression_epoch(X, y, theta, lr=0.1, batch=100):
     num = (M + batch - 1) // batch
     for i in range(num):
         l, r = i * batch, min(M, (i + 1) * batch)
-
         Iy = np.eye(K)[y[l:r]]
         Z = np.exp(X[l:r].dot(theta))
         for j in range(r - l):
