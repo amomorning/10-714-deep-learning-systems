@@ -145,8 +145,8 @@ def nn_epoch(X, y, W1, W2, lr=0.1, batch=100):
         return x * (x > 0)
 
     def normalize(z, n):
-        for i in range(n):
-            z[i] = z[i] / z[i].sum()
+        for x in range(n):
+            z[x] = z[x] / z[x].sum()
         return z
 
     num = (M + batch - 1) // batch
