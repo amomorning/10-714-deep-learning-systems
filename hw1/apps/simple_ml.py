@@ -1,13 +1,14 @@
 import struct
 import gzip
 import numpy as np
-
+import logging
+LOGGER = logging.getLogger(__name__)
 import sys
 sys.path.append('python/')
 import needle as ndl
 
 
-def parse_mnist(image_filesname, label_filename):
+def parse_mnist(image_filename, label_filename):
     """ Read an images and labels file in MNIST format.  See this page:
     http://yann.lecun.com/exdb/mnist/ for a description of the file format.
 
@@ -30,7 +31,12 @@ def parse_mnist(image_filesname, label_filename):
                 for MNIST will contain the values 0-9.
     """
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    with gzip.open(image_filename) as f:
+        X = np.frombuffer(f.read(), 'B', offset=16)
+        X = X.reshape(-1, 784).astype('float32') / 255
+    with gzip.open(label_filename, 'r') as f:
+        y = np.frombuffer(f.read(), 'B', offset=8)
+    return X, y    
     ### END YOUR SOLUTION
 
 
@@ -51,7 +57,9 @@ def softmax_loss(Z, y_one_hot):
         Average softmax loss over the sample. (ndl.Tensor[np.float32])
     """
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    m, k = Z.shape
+    ans = ndl.log(ndl.exp(Z).sum((1,))) - (Z * y_one_hot).sum((1,))
+    return ans.sum() / m
     ### END YOUR SOLUTION
 
 
@@ -80,7 +88,28 @@ def nn_epoch(X, y, W1, W2, lr = 0.1, batch=100):
     """
 
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    (M, N), (D, K) = X.shape, W2.shape
+
+    num = (M + batch - 1) // batch
+    LOGGER.info('num = ' + str(num))
+    for i in range(num):
+        if i % 10 == 0:
+            LOGGER.info('i = ' + str(i))
+        l, r = i * batch, min(M, (i + 1) * batch)
+        X_b = ndl.Tensor(X[l:r])
+
+        y_b = y[l:r]
+        y_b_one_hot = np.zeros((r-l, K))
+        y_b_one_hot[np.arange(y_b.size), y_b] = 1
+        y_b_ = ndl.Tensor(y_b_one_hot)
+        
+
+        loss = softmax_loss(ndl.relu(X_b @ W1) @ W2, y_b_)
+        loss.backward()
+
+        W1 -= W1.grad * lr
+        W2 -= W2.grad * lr
+    return W1, W2
     ### END YOUR SOLUTION
 
 

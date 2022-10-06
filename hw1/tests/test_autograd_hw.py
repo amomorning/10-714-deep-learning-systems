@@ -8,6 +8,8 @@ import numpy as np
 import mugrade
 import needle as ndl
 
+import logging
+LOGGER = logging.getLogger(__name__)
 
 ##############################################################################
 ### TESTS/SUBMISSION CODE FOR forward passes
@@ -623,10 +625,15 @@ def test_nn_epoch_ndl():
     # test full epoch
     X,y = parse_mnist("data/train-images-idx3-ubyte.gz",
                       "data/train-labels-idx1-ubyte.gz")
+    LOGGER.info('data load ok')
     np.random.seed(0)
     W1 = ndl.Tensor(np.random.randn(X.shape[1], 100).astype(np.float32) / np.sqrt(100))
     W2 = ndl.Tensor(np.random.randn(100, 10).astype(np.float32) / np.sqrt(10))
+    
+    LOGGER.info('W1 W2 start')
     W1, W2 = nn_epoch(X, y, W1, W2, lr=0.2, batch=100)
+
+    LOGGER.info('W1 W2 ok')
     np.testing.assert_allclose(np.linalg.norm(W1.numpy()), 28.437788,
                                rtol=1e-5, atol=1e-5)
     np.testing.assert_allclose(np.linalg.norm(W2.numpy()), 10.455095,
