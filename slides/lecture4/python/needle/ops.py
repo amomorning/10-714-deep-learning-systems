@@ -1,8 +1,8 @@
 """Operator and gradient implementations."""
 from numbers import Number
-from typing import Optional, List
+from typing import Optional, List, Dict
 from .autograd import NDArray
-from .autograd import Op, Tensor, Value, TensorOp
+from .autograd import Op, Tensor, Value, TensorOp, cpu
 
 import numpy
 
