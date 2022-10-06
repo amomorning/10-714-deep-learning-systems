@@ -91,24 +91,21 @@ def nn_epoch(X, y, W1, W2, lr = 0.1, batch=100):
     (M, N), (D, K) = X.shape, W2.shape
 
     num = (M + batch - 1) // batch
-    LOGGER.info('num = ' + str(num))
+    # LOGGER.info('num = ' + str(num))
+    y_one_hot = np.zeros((M, K))
+    y_one_hot[np.arange(y.size), y] = 1
     for i in range(num):
-        if i % 10 == 0:
-            LOGGER.info('i = ' + str(i))
+        # if i % 10 == 0:
+        #     LOGGER.info('i = ' + str(i))
         l, r = i * batch, min(M, (i + 1) * batch)
         X_b = ndl.Tensor(X[l:r])
+        y_b = ndl.Tensor(y_one_hot[l:r])
 
-        y_b = y[l:r]
-        y_b_one_hot = np.zeros((r-l, K))
-        y_b_one_hot[np.arange(y_b.size), y_b] = 1
-        y_b_ = ndl.Tensor(y_b_one_hot)
-        
-
-        loss = softmax_loss(ndl.relu(X_b @ W1) @ W2, y_b_)
+        loss = softmax_loss(ndl.relu(X_b @ W1) @ W2, y_b)
         loss.backward()
 
-        W1 -= W1.grad * lr
-        W2 -= W2.grad * lr
+        W1 = (W1 - W1.grad * lr).detach()
+        W2 = (W2 - W2.grad * lr).detach()
     return W1, W2
     ### END YOUR SOLUTION
 
