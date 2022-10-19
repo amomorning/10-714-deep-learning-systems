@@ -407,6 +407,7 @@ def test_op_logsumexp_forward_4():
 
 def test_op_logsumexp_forward_5():
     test_data = ndl.ops.logsumexp(ndl.Tensor(np.array([[1e10,1e9,1e8,-10],[1e-10,1e9,1e8,-10]])), (0,)).numpy()
+    print(test_data)
     np.testing.assert_allclose(test_data,np.array([ 1.00000000e+10,  1.00000000e+09,  1.00000001e+08, -9.30685282e+00]), rtol=1e-5, atol=1e-5)
 
 def test_op_logsumexp_backward_1():

@@ -12,6 +12,7 @@ TENSOR_COUNTER = 0
 # as the backend for our computations, this line will change in later homeworks
 import numpy as array_api
 NDArray = numpy.ndarray
+import needle.init as init
 
 
 class Device:

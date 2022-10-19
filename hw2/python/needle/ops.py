@@ -138,7 +138,7 @@ class PowerScalar(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return (out_grad * node.inputs[0] ** (self.scalar - 1) * self.scalar,)
         ### END YOUR SOLUTION
 
 
@@ -367,11 +367,20 @@ class LogSumExp(TensorOp):
 
     def compute(self, Z):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        mx = array_api.max(Z, axis=self.axes)
+        mxr = mx
+        if self.axes is not None:
+            shape = list(mx.shape)
+            for x in sorted(self.axes):
+                shape.insert(x, 1)
+            mxr = mx.reshape(shape)
+
+        return array_api.log(array_api.exp(Z-mxr).sum(axis=self.axes)) + mx
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
+        # print(node.inputs)
         raise NotImplementedError()
         ### END YOUR SOLUTION
 
