@@ -13,7 +13,7 @@
 
 1. `fork` the homework repository (e.g. `hw3`) and `clone` to local
 2. move all of the content to a subfolder
-3. `git add subfolder`  and `git commit -m "Add hw3"`
+3. `git add hw3`  and `git commit -m "Add hw3"`
 4. `git push remote origin`
 
 ### main repo
