@@ -1,18 +1,19 @@
 """Core data structures."""
 import needle
-from typing import List, Optional, NamedTuple, Tuple, Union
-from collections import namedtuple
+from typing import List, Optional, NamedTuple, Tuple, Union, Dict
+from collections import namedtuple, defaultdict
 import numpy
+from needle import init
 
 # needle version
 LAZY_MODE = False
 TENSOR_COUNTER = 0
 
-# NOTE: we will import numpy as the array_api
-# as the backend for our computations, this line will change in later homeworks
+# NOTE: we will numpy as the array_api
+# to backup our computations, this line will change in later homeworks
 import numpy as array_api
+
 NDArray = numpy.ndarray
-import needle.init as init
 
 
 class Device:
@@ -41,12 +42,12 @@ class CPUDevice(Device):
         return numpy.ones(shape, dtype=dtype)
 
     def randn(self, *shape):
-        # note: numpy doesn't support types within standard random routines, and 
+        # note: numpy doesn't support types within standard random routines, and
         # .astype("float32") does work if we're generating a singleton
-        return numpy.random.randn(*shape) 
+        return numpy.random.randn(*shape)
 
     def rand(self, *shape):
-        # note: numpy doesn't support types within standard random routines, and 
+        # note: numpy doesn't support types within standard random routines, and
         # .astype("float32") does work if we're generating a singleton
         return numpy.random.rand(*shape)
 
@@ -363,10 +364,9 @@ class Tensor(Value):
             return needle.ops.MulScalar(other)(self)
 
     def __pow__(self, other):
-        if isinstance(other, Tensor):
-            raise NotImplementedError()
-        else:
-            return needle.ops.PowerScalar(other)(self)
+        ### BEGIN YOUR SOLUTION
+        return needle.ops.PowerScalar(other)(self)
+        ### END YOUR SOLUTION
 
     def __sub__(self, other):
         if isinstance(other, Tensor):
@@ -413,7 +413,7 @@ def compute_gradient_of_variables(output_tensor, out_grad):
     Store the computed result in the grad field of each Variable.
     """
     # a map from node to a list of gradient contributions from each output node
-    node_to_output_grads_list: Dict[Tensor, List[Tensor]] = {}
+    node_to_output_grads_list: Dict[Tensor, List[Tensor]] = defaultdict(list)
     # Special note on initializing gradient of
     # We are really taking a derivative of the scalar reduce_sum(output_node)
     # instead of the vector output_node. But this is the common case for loss function.
@@ -423,15 +423,14 @@ def compute_gradient_of_variables(output_tensor, out_grad):
     reverse_topo_order = list(reversed(find_topo_sort([output_tensor])))
 
     ### BEGIN YOUR SOLUTION
-    for vi in reverse_topo_order:
-        vi.grad = sum_node_list(node_to_output_grads_list[vi])
-        if vi.op:
-            vks = vi.op.gradient(vi.grad, vi)
-            for i, k in enumerate(vi.inputs):
-                if not k in node_to_output_grads_list:
-                    node_to_output_grads_list[k] = [vks[i]]
-                else:
-                    node_to_output_grads_list[k].append(vks[i])
+    for node in reverse_topo_order:
+        adjoint = sum_node_list(node_to_output_grads_list[node])
+        partial_adjoints = [adjoint] if node.is_leaf() else node.op.gradient_as_tuple(adjoint, node)
+        for input_node, partial_adjoint in zip(node.inputs, partial_adjoints):
+            node_to_output_grads_list[input_node].append(partial_adjoint)
+
+    for node, partial_adjoints in node_to_output_grads_list.items():
+        node.grad = sum_node_list(partial_adjoints)
     ### END YOUR SOLUTION
 
 
@@ -444,7 +443,7 @@ def find_topo_sort(node_list: List[Value]) -> List[Value]:
     sort.
     """
     ### BEGIN YOUR SOLUTION
-    visited = {}
+    visited = set()
     topo_order = []
 
     for node in node_list:
@@ -458,7 +457,7 @@ def find_topo_sort(node_list: List[Value]) -> List[Value]:
 def topo_sort_dfs(node, visited, topo_order):
     """Post-order DFS"""
     ### BEGIN YOUR SOLUTION
-    visited[node] = True
+    visited.add(node)
     for v in node.inputs:
         if v not in visited:
             topo_sort_dfs(v, visited, topo_order)
@@ -475,5 +474,4 @@ def sum_node_list(node_list):
     """Custom sum function in order to avoid create redundant nodes in Python sum implementation."""
     from operator import add
     from functools import reduce
-
     return reduce(add, node_list)
