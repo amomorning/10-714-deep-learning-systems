@@ -216,7 +216,12 @@ class Reshape(TensorOp):
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
         a = node.inputs[0]
-        return (out_grad.reshape(a.shape), )
+        # print('a', a.shape)
+        #
+        # for i in range(len(a.shape), len(out_grad.shape)):
+        #     out_grad = out_grad.sum(i)
+        # print('out_grad', out_grad.shape)
+        return (out_grad.reshape(a.shape),)
         ### END YOUR SOLUTION
 
 
@@ -236,7 +241,7 @@ class BroadcastTo(TensorOp):
         a = node.inputs[0]
         d = len(out_grad.shape) - len(a.shape)
         axes = tuple([i for i, v in enumerate(list(a.shape)) if v == 1])
-        return (out_grad.sum(tuple(range(d))).sum(axes).reshape(a.shape), )
+        return out_grad.sum(tuple(range(d))).sum(axes).reshape(a.shape),
         ### END YOUR SOLUTION
 
 
@@ -380,8 +385,18 @@ class LogSumExp(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        # print(node.inputs)
-        raise NotImplementedError()
+        Z = node.inputs[0].realize_cached_data()
+        mx = array_api.max(Z, axis=self.axes)
+        shape = list(mx.shape)
+        if self.axes is not None:
+            for x in sorted(self.axes):
+                shape.insert(x, 1)
+        shape = tuple(shape)
+        mx = mx.reshape(shape)
+        ez = array_api.exp(Z-mx)
+        return (out_grad.reshape(shape) * Tensor.make_const(ez/ez.sum(axis=self.axes).reshape(shape)),)
+
+
         ### END YOUR SOLUTION
 
 

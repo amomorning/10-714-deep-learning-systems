@@ -49,8 +49,6 @@ def _child_modules(value: object) -> List["Module"]:
         return []
 
 
-
-
 class Module:
     def __init__(self):
         self.training = True
@@ -96,11 +94,10 @@ class Linear(Module):
     def forward(self, X: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
         if self.bias:
-            return X@self.weight + self.bias
+            return X @ self.weight + self.bias
         else:
-            return X@self.weight
+            return X @ self.weight
         ### END YOUR SOLUTION
-
 
 
 class Flatten(Module):
@@ -127,15 +124,16 @@ class Sequential(Module):
         for m in self.modules:
             x = m.forward(x)
         return x
-        ### END YOUR SOLUTION
+        ### END YOUR SOLUTIONq
 
 
 class SoftmaxLoss(Module):
     def forward(self, logits: Tensor, y: Tensor):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        m, k = logits.shape
+        ans = ops.logsumexp(logits, axes=(1,)) - (logits * init.one_hot(k, y)).sum((1,))
+        return ans.sum() / m
         ### END YOUR SOLUTION
-
 
 
 class BatchNorm1d(Module):
@@ -147,7 +145,6 @@ class BatchNorm1d(Module):
         ### BEGIN YOUR SOLUTION
         raise NotImplementedError()
         ### END YOUR SOLUTION
-
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
@@ -161,17 +158,23 @@ class LayerNorm1d(Module):
         self.dim = dim
         self.eps = eps
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.weight = Parameter(init.ones(dim, device=device, dtype=dtype))
+        self.bias = Parameter(init.zeros(dim, device=device, dtype=dtype))
         ### END YOUR SOLUTION
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        h, w = x.shape
+
+        mean = Tensor((x.sum(-1) / w).reshape((h, 1)))
+        var = Tensor(((((x - mean) ** 2).sum(-1) / w + self.eps) ** 0.5).reshape((h, 1)))
+
+        return self.weight * (x - mean) / var + self.bias
         ### END YOUR SOLUTION
 
 
 class Dropout(Module):
-    def __init__(self, p = 0.5):
+    def __init__(self, p=0.5):
         super().__init__()
         self.p = p
 
@@ -190,6 +193,3 @@ class Residual(Module):
         ### BEGIN YOUR SOLUTION
         raise NotImplementedError()
         ### END YOUR SOLUTION
-
-
-
