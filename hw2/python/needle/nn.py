@@ -94,7 +94,7 @@ class Linear(Module):
     def forward(self, X: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
         if self.bias:
-            return X @ self.weight + self.bias
+            return X @ self.weight + self.bias.broadcast_to((X.shape[0], self.out_features))
         else:
             return X @ self.weight
         ### END YOUR SOLUTION
@@ -125,7 +125,7 @@ class Sequential(Module):
         for m in self.modules:
             x = m.forward(x)
         return x
-        ### END YOUR SOLUTIONq
+        ### END YOUR SOLUTION
 
 
 class SoftmaxLoss(Module):
@@ -163,7 +163,9 @@ class BatchNorm1d(Module):
         else:
             mean = self.running_mean.reshape((1, k)).broadcast_to(x.shape)
             var = self.running_var.reshape((1, k)).broadcast_to(x.shape)
-        return self.weight * (x - mean) / ((var + self.eps) ** 0.5) + self.bias
+        weight = self.weight.reshape((1, k)).broadcast_to(x.shape)
+        bias = self.bias.reshape((1, k)).broadcast_to(x.shape)
+        return weight * (x - mean) / ((var + self.eps) ** 0.5) + bias
 
         ### END YOUR SOLUTION
 
@@ -185,7 +187,9 @@ class LayerNorm1d(Module):
         mean = mean.reshape((n, 1)).broadcast_to(x.shape)
         var = ((x - mean) ** 2).sum(axes=(1, )) / k
         var = var.reshape((n, 1)).broadcast_to(x.shape)
-        return self.weight * (x - mean) / ((var + self.eps) ** 0.5) + self.bias
+        weight = self.weight.reshape((1, k)).broadcast_to(x.shape)
+        bias = self.bias.reshape((1, k)).broadcast_to(x.shape)
+        return weight * (x - mean) / ((var + self.eps) ** 0.5) + bias
         ### END YOUR SOLUTION
 
 
