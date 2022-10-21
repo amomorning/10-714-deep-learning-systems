@@ -128,7 +128,7 @@ def mul_scalar(a, scalar):
 class PowerScalar(TensorOp):
     """Op raise a tensor to an (integer) power."""
 
-    def __init__(self, scalar: int):
+    def __init__(self, scalar):
         self.scalar = scalar
 
     def compute(self, a: NDArray) -> NDArray:

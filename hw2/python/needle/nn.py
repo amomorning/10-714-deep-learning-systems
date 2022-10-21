@@ -210,7 +210,7 @@ class Residual(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        return x + self.fn(x)
+        return self.fn(x) + x
         ### END YOUR SOLUTION
 
 
