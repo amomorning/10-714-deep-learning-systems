@@ -115,11 +115,10 @@ class DataLoader:
 
     def __iter__(self):
         ### BEGIN YOUR SOLUTION
+        indices = np.arange(len(self.dataset))
         if self.shuffle:
-            indices = np.arange(len(self.dataset))
             np.random.shuffle(indices)
-            # indices = np.random.permutation(np.arange(len(self.dataset)))
-            self.ordering = np.array_split(indices, range(self.batch_size, len(self.dataset), self.batch_size))
+        self.ordering = np.array_split(indices, range(self.batch_size, len(self.dataset), self.batch_size))
 
         self.ordering = iter(self.ordering)
         ### END YOUR SOLUTION
@@ -172,4 +171,3 @@ class NDArrayDataset(Dataset):
 
     def __getitem__(self, i) -> object:
         return tuple([a[i] for a in self.arrays])
-
