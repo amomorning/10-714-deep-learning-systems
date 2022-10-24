@@ -407,7 +407,6 @@ def test_op_logsumexp_forward_4():
 
 def test_op_logsumexp_forward_5():
     test_data = ndl.ops.logsumexp(ndl.Tensor(np.array([[1e10,1e9,1e8,-10],[1e-10,1e9,1e8,-10]])), (0,)).numpy()
-    print(test_data)
     np.testing.assert_allclose(test_data,np.array([ 1.00000000e+10,  1.00000000e+09,  1.00000001e+08, -9.30685282e+00]), rtol=1e-5, atol=1e-5)
 
 def test_op_logsumexp_backward_1():
@@ -564,6 +563,7 @@ def test_nn_linear_forward_3():
          dtype=np.float32), rtol=1e-5, atol=1e-5)
 
 def test_nn_linear_backward_1():
+    print(linear_backward((10, 5), (1, 10)))
     np.testing.assert_allclose(linear_backward((10, 5), (1, 10)),
         np.array([[ 20.61148,   6.920893,  -1.625556, -13.497676,  -6.672813,
                18.762121,   7.286628,   8.18535 ,   2.741301,   5.723689]],
@@ -1106,4 +1106,4 @@ def submit_mlp_resnet():
     mugrade.submit(mlp_resnet_forward(15, 3, 2, 15, nn.BatchNorm1d, 0.3))
     mugrade.submit(train_epoch_1(7, 256, ndl.optim.Adam, lr=0.01, weight_decay=0.01))
     mugrade.submit(eval_epoch_1(12, 154))
-    mugrade.submit(train_mnist_1(554, 3, ndl.optim.SGD, 0.01, 0.01, 7))
+    mugrade.submit(train_mnist_1(550, 1, ndl.optim.SGD, 0.01, 0.01, 7))
