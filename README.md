@@ -9,6 +9,15 @@
 
 ## clone a git repository as a subdirectory
 
+### new update: `fetch.sh`
+
+automatically clone the homework repository as subdirectory.
+
+``` bash
+# fetch homework repository example
+bash fetch.sh hw4
+```
+
 ### subfolder repo
 
 1. `fork` the homework repository (e.g. `hw3`) and `clone` to local
