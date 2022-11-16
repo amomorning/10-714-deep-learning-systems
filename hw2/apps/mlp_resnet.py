@@ -15,7 +15,6 @@ def ResidualBlock(dim, hidden_dim, norm=nn.BatchNorm1d, drop_prob=0.1):
     fn = nn.Sequential(nn.Linear(dim, hidden_dim), norm(hidden_dim), nn.ReLU(),
                        nn.Dropout(drop_prob), nn.Linear(hidden_dim, dim), norm(dim))
     return nn.Sequential(nn.Residual(fn), nn.ReLU())
-
     ### END YOUR SOLUTION
 
 
