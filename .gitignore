@@ -137,3 +137,10 @@ data/
 
 sensitive_info.py
 test.py
+
+
+CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
+kernels.air
+kernels.metallib

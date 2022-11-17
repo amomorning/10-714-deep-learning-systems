@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.2)
 project(needle C CXX)
 
+set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+
 # find correct version of Python
 execute_process(COMMAND python3-config --prefix
   OUTPUT_VARIABLE Python_ROOT_DIR)
@@ -14,12 +16,11 @@ execute_process(COMMAND python3 -m pybind11 --cmakedir
   OUTPUT_STRIP_TRAILING_WHITESPACE)
 find_package(pybind11 PATHS ${__pybind_path})
 
-
 if(NOT MSVC)
-  set(CMAKE_CXX_FLAGS "-std=c++11 -O2 -march=native ${CMAKE_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS "-std=c++17 -O2 -march=native ${CMAKE_CXX_FLAGS}")
   set(CMAKE_CUDA_STANDARD 14)
 else()
-  set(CMAKE_CXX_FLAGS "/std:c++11 -O2 -march=native ${CMAKE_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS "/std:c++17 -O2 -march=native ${CMAKE_CXX_FLAGS}")
   set(CMAKE_CUDA_STANDARD 14)
 endif()
 
@@ -85,3 +86,36 @@ if(CUDA_FOUND)
 
 endif()
 
+
+####################
+### METAL BACKEND ###
+####################
+message(STATUS "Building metal backend")
+
+add_library(ndarray_backend_metal MODULE src/metal/ndarray_backend_metal.cc)
+target_include_directories(ndarray_backend_metal PUBLIC ../third_party/metal-cpp)
+
+add_custom_command(
+  TARGET ndarray_backend_metal POST_BUILD
+  DEPENDS src/metal/kernels.metal
+  COMMAND xcrun -sdk macosx metal src/metal/kernels.metal -c -o kernels.air
+  COMMAND xcrun -sdk macosx metallib kernels.air -o kernels.metallib
+)
+
+target_link_libraries(ndarray_backend_metal
+  ${LINKER_LIBS}
+  "-framework Metal"
+  "-framework QuartzCore"
+  "-framework Foundation")
+pybind11_extension(ndarray_backend_metal)
+pybind11_strip(ndarray_backend_metal)
+
+# directly output to ffi folder
+set_target_properties(ndarray_backend_metal
+  PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/python/needle/backend_ndarray
+  CXX_VISIBILITY_PRESET "hidden"
+)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  set_property(TARGET ndarray_backend_metal PROPERTY LINK_OPTIONS -undefined dynamic_lookup)
+endif()
