@@ -287,9 +287,9 @@ void EwiseAdd(const MetalArray<scalar_t>& a, const MetalArray<scalar_t>& b,
   command_encoder->setBuffer(a.buffer, 0, 0);
   command_encoder->setBuffer(b.buffer, 0, 1);
   command_encoder->setBuffer(out->buffer, 0, 2);
+
   MetalDims dim = MetalOneDim(a.size);
-  command_encoder->dispatchThreads(dim.num_threads_per_grid,
-                                   dim.num_threads_per_group);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -299,13 +299,13 @@ void ScalarAdd(const MetalArray<scalar_t>& a, scalar_t val,
   BEGIN_COMPUTE_COMMAND("ScalarAddKernel")
 
   command_encoder->setBuffer(a.buffer, 0, 0);
-  MetalArray<scalar_t> val_arr =
-      VecToMetal<scalar_t>(std::vector<scalar_t>{val});
+
+  MetalArray<scalar_t> val_arr = VecToMetal<scalar_t>(std::vector<scalar_t>{val});
   command_encoder->setBuffer(val_arr.buffer, 0, 1);
+
   command_encoder->setBuffer(out->buffer, 0, 2);
   MetalDims dim = MetalOneDim(a.size);
-  command_encoder->dispatchThreads(dim.num_threads_per_grid,
-                                   dim.num_threads_per_group);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -314,6 +314,12 @@ void EwiseMul(const MetalArray<scalar_t>& a, const MetalArray<scalar_t>& b,
               MetalArray<scalar_t>* out) {
   BEGIN_COMPUTE_COMMAND("EwiseMulKernel")
 
+  command_encoder->setBuffer(a.buffer, 0, 0);
+  command_encoder->setBuffer(b.buffer, 0, 1);
+  command_encoder->setBuffer(out->buffer, 0, 2);
+
+  MetalDims dim = MetalOneDim(a.size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -322,6 +328,15 @@ void ScalarMul(const MetalArray<scalar_t>& a, scalar_t val,
                MetalArray<scalar_t>* out) {
   BEGIN_COMPUTE_COMMAND("ScalarMulKernel")
 
+  command_encoder->setBuffer(a.buffer, 0, 0);
+
+  MetalArray<scalar_t> val_arr = VecToMetal<scalar_t>(std::vector<scalar_t>{val});
+  command_encoder->setBuffer(val_arr.buffer, 0, 1);
+
+  command_encoder->setBuffer(out->buffer, 0, 2);
+
+  MetalDims dim = MetalOneDim(a.size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -330,12 +345,28 @@ void EwiseDiv(const MetalArray<scalar_t>& a, const MetalArray<scalar_t>& b,
               MetalArray<scalar_t>* out) {
   BEGIN_COMPUTE_COMMAND("EwiseDivKernel")
 
+  command_encoder->setBuffer(a.buffer, 0, 0);
+  command_encoder->setBuffer(b.buffer, 0, 1);
+  command_encoder->setBuffer(out->buffer, 0, 2);
+
+  MetalDims dim = MetalOneDim(a.size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
+  
   END_COMPUTE_COMMAND
 }
 
 void ScalarDiv(const MetalArray<scalar_t>& a, scalar_t val,
                MetalArray<scalar_t>* out) {
   BEGIN_COMPUTE_COMMAND("ScalarDivKernel")
+
+  command_encoder->setBuffer(a.buffer, 0, 0);
+
+  MetalArray<scalar_t> val_arr = VecToMetal<scalar_t>(std::vector<scalar_t>{val});
+  command_encoder->setBuffer(val_arr.buffer, 0, 1);
+
+  command_encoder->setBuffer(out->buffer, 0, 2);
+  MetalDims dim = MetalOneDim(a.size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
 
   END_COMPUTE_COMMAND
@@ -345,6 +376,14 @@ void ScalarPower(const MetalArray<scalar_t>& a, scalar_t val,
                  MetalArray<scalar_t>* out) {
   BEGIN_COMPUTE_COMMAND("ScalarPowerKernel")
 
+  command_encoder->setBuffer(a.buffer, 0, 0);
+
+  MetalArray<scalar_t> val_arr = VecToMetal<scalar_t>(std::vector<scalar_t>{val});
+  command_encoder->setBuffer(val_arr.buffer, 0, 1);
+
+  command_encoder->setBuffer(out->buffer, 0, 2);
+  MetalDims dim = MetalOneDim(a.size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -353,6 +392,12 @@ void EwiseMaximum(const MetalArray<scalar_t>& a, const MetalArray<scalar_t>& b,
                   MetalArray<scalar_t>* out) {
   BEGIN_COMPUTE_COMMAND("EwiseMaximumKernel")
 
+  command_encoder->setBuffer(a.buffer, 0, 0);
+  command_encoder->setBuffer(b.buffer, 0, 1);
+  command_encoder->setBuffer(out->buffer, 0, 2);
+
+  MetalDims dim = MetalOneDim(a.size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -361,6 +406,14 @@ void ScalarMaximum(const MetalArray<scalar_t>& a, scalar_t val,
                    MetalArray<scalar_t>* out) {
   BEGIN_COMPUTE_COMMAND("ScalarMaximumKernel")
 
+  command_encoder->setBuffer(a.buffer, 0, 0);
+
+  MetalArray<scalar_t> val_arr = VecToMetal<scalar_t>(std::vector<scalar_t>{val});
+  command_encoder->setBuffer(val_arr.buffer, 0, 1);
+
+  command_encoder->setBuffer(out->buffer, 0, 2);
+  MetalDims dim = MetalOneDim(a.size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -369,6 +422,12 @@ void EwiseEq(const MetalArray<scalar_t>& a, const MetalArray<scalar_t>& b,
              MetalArray<scalar_t>* out) {
   BEGIN_COMPUTE_COMMAND("EwiseEqKernel")
 
+  command_encoder->setBuffer(a.buffer, 0, 0);
+  command_encoder->setBuffer(b.buffer, 0, 1);
+  command_encoder->setBuffer(out->buffer, 0, 2);
+
+  MetalDims dim = MetalOneDim(a.size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -377,6 +436,14 @@ void ScalarEq(const MetalArray<scalar_t>& a, scalar_t val,
               MetalArray<scalar_t>* out) {
   BEGIN_COMPUTE_COMMAND("ScalarEqKernel")
 
+  command_encoder->setBuffer(a.buffer, 0, 0);
+
+  MetalArray<scalar_t> val_arr = VecToMetal<scalar_t>(std::vector<scalar_t>{val});
+  command_encoder->setBuffer(val_arr.buffer, 0, 1);
+
+  command_encoder->setBuffer(out->buffer, 0, 2);
+  MetalDims dim = MetalOneDim(a.size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -385,6 +452,12 @@ void EwiseGe(const MetalArray<scalar_t>& a, const MetalArray<scalar_t>& b,
              MetalArray<scalar_t>* out) {
   BEGIN_COMPUTE_COMMAND("EwiseGeKernel")
 
+  command_encoder->setBuffer(a.buffer, 0, 0);
+  command_encoder->setBuffer(b.buffer, 0, 1);
+  command_encoder->setBuffer(out->buffer, 0, 2);
+
+  MetalDims dim = MetalOneDim(a.size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -393,6 +466,14 @@ void ScalarGe(const MetalArray<scalar_t>& a, scalar_t val,
               MetalArray<scalar_t>* out) {
   BEGIN_COMPUTE_COMMAND("ScalarGeKernel")
 
+  command_encoder->setBuffer(a.buffer, 0, 0);
+
+  MetalArray<scalar_t> val_arr = VecToMetal<scalar_t>(std::vector<scalar_t>{val});
+  command_encoder->setBuffer(val_arr.buffer, 0, 1);
+
+  command_encoder->setBuffer(out->buffer, 0, 2);
+  MetalDims dim = MetalOneDim(a.size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -400,6 +481,10 @@ void ScalarGe(const MetalArray<scalar_t>& a, scalar_t val,
 void EwiseLog(const MetalArray<scalar_t>& a, MetalArray<scalar_t>* out) {
   BEGIN_COMPUTE_COMMAND("EwiseLogKernel")
 
+  command_encoder->setBuffer(a.buffer, 0, 0);
+  command_encoder->setBuffer(out->buffer, 0, 1);
+  MetalDims dim = MetalOneDim(a.size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -407,6 +492,10 @@ void EwiseLog(const MetalArray<scalar_t>& a, MetalArray<scalar_t>* out) {
 void EwiseExp(const MetalArray<scalar_t>& a, MetalArray<scalar_t>* out) {
   BEGIN_COMPUTE_COMMAND("EwiseExpKernel")
 
+  command_encoder->setBuffer(a.buffer, 0, 0);
+  command_encoder->setBuffer(out->buffer, 0, 1);
+  MetalDims dim = MetalOneDim(a.size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -414,6 +503,10 @@ void EwiseExp(const MetalArray<scalar_t>& a, MetalArray<scalar_t>* out) {
 void EwiseTanh(const MetalArray<scalar_t>& a, MetalArray<scalar_t>* out) {
   BEGIN_COMPUTE_COMMAND("EwiseTanhKernel")
 
+  command_encoder->setBuffer(a.buffer, 0, 0);
+  command_encoder->setBuffer(out->buffer, 0, 1);
+  MetalDims dim = MetalOneDim(a.size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -491,22 +584,22 @@ PYBIND11_MODULE(ndarray_backend_metal, m) {
   m.def("ewise_add", EwiseAdd);
   m.def("scalar_add", ScalarAdd);
 
-  // m.def("ewise_mul", EwiseMul);
-  // m.def("scalar_mul", ScalarMul);
-  // m.def("ewise_div", EwiseDiv);
-  // m.def("scalar_div", ScalarDiv);
-  // m.def("scalar_power", ScalarPower);
+  m.def("ewise_mul", EwiseMul);
+  m.def("scalar_mul", ScalarMul);
+  m.def("ewise_div", EwiseDiv);
+  m.def("scalar_div", ScalarDiv);
+  m.def("scalar_power", ScalarPower);
 
-  // m.def("ewise_maximum", EwiseMaximum);
-  // m.def("scalar_maximum", ScalarMaximum);
-  // m.def("ewise_eq", EwiseEq);
-  // m.def("scalar_eq", ScalarEq);
-  // m.def("ewise_ge", EwiseGe);
-  // m.def("scalar_ge", ScalarGe);
+  m.def("ewise_maximum", EwiseMaximum);
+  m.def("scalar_maximum", ScalarMaximum);
+  m.def("ewise_eq", EwiseEq);
+  m.def("scalar_eq", ScalarEq);
+  m.def("ewise_ge", EwiseGe);
+  m.def("scalar_ge", ScalarGe);
 
-  // m.def("ewise_log", EwiseLog);
-  // m.def("ewise_exp", EwiseExp);
-  // m.def("ewise_tanh", EwiseTanh);
+  m.def("ewise_log", EwiseLog);
+  m.def("ewise_exp", EwiseExp);
+  m.def("ewise_tanh", EwiseTanh);
 
   // m.def("matmul", Matmul);
 

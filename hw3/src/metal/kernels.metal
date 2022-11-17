@@ -59,93 +59,110 @@ kernel void EwiseAddKernel(device const float* a [[buffer(0)]],
                            device const float* b [[buffer(1)]],
                            device float* out [[buffer(2)]],
                            uint index [[thread_position_in_grid]]) {
+  out[index] = a[index] + b[index];
 }
 
 kernel void ScalarAddKernel(device const float* a [[buffer(0)]],
                             device const float* val [[buffer(1)]],
                             device float* out [[buffer(2)]],
                             uint index [[thread_position_in_grid]]) {
+  out[index] = a[index] + val[0];
 }
 
 kernel void EwiseMulKernel(device const float* a [[buffer(0)]],
                            device const float* b [[buffer(1)]],
                            device float* out [[buffer(2)]],
                            uint index [[thread_position_in_grid]]) {
+  out[index] = a[index] * b[index];
 }
 
 kernel void ScalarMulKernel(device const float* a [[buffer(0)]],
                             device const float* val [[buffer(1)]],
                             device float* out [[buffer(2)]],
                             uint index [[thread_position_in_grid]]) {
+  out[index] = a[index] * val[0];
 }
 
 kernel void EwiseDivKernel(device const float* a [[buffer(0)]],
                            device const float* b [[buffer(1)]],
                            device float* out [[buffer(2)]],
                            uint index [[thread_position_in_grid]]) {
+  out[index] = a[index] / b[index];
 }
 
 kernel void ScalarDivKernel(device const float* a [[buffer(0)]],
                             device const float* val [[buffer(1)]],
                             device float* out [[buffer(2)]],
                             uint index [[thread_position_in_grid]]) {
+  out[index] = a[index] / val[0];
 }
 
 kernel void ScalarPowerKernel(device const float* a [[buffer(0)]],
                               device const float* val [[buffer(1)]],
                               device float* out [[buffer(2)]],
                               uint index [[thread_position_in_grid]]) {
+  out[index] = metal::pow(a[index], val[0]);
 }
 
 kernel void EwiseMaximumKernel(device const float* a [[buffer(0)]],
                                device const float* b [[buffer(1)]],
                                device float* out [[buffer(2)]],
                                uint index [[thread_position_in_grid]]) {
+  out[index] = metal::max(a[index], b[index]);
 }
 
 kernel void ScalarMaximumKernel(device const float* a [[buffer(0)]],
                                 device const float* val [[buffer(1)]],
                                 device float* out [[buffer(2)]],
                                 uint index [[thread_position_in_grid]]) {
+  out[index] = metal::max(a[index], val[0]);
 }
 
 kernel void EwiseEqKernel(device const float* a [[buffer(0)]],
                           device const float* b [[buffer(1)]],
                           device float* out [[buffer(2)]],
                           uint index [[thread_position_in_grid]]) {
+  out[index] = a[index] == b[index];
 }
 
 kernel void ScalarEqKernel(device const float* a [[buffer(0)]],
                            device const float* val [[buffer(1)]],
                            device float* out [[buffer(2)]],
                            uint index [[thread_position_in_grid]]) {
+  out[index] = a[index] == val[0];
 }
 
 kernel void EwiseGeKernel(device const float* a [[buffer(0)]],
                           device const float* b [[buffer(1)]],
                           device float* out [[buffer(2)]],
                           uint index [[thread_position_in_grid]]) {
+  out[index] = a[index] >= b[index];
 }
 
 kernel void ScalarGeKernel(device const float* a [[buffer(0)]],
                            device const float* val [[buffer(1)]],
                            device float* out [[buffer(2)]],
                            uint index [[thread_position_in_grid]]) {
+  out[index] = a[index] >= val[0];
 }
 
 kernel void EwiseLogKernel(device const float* a [[buffer(0)]],
                            device float* out [[buffer(1)]],
                            uint index [[thread_position_in_grid]]) {
+  out[index] = metal::log(a[index]);
 }
 
 kernel void EwiseExpKernel(device const float* a [[buffer(0)]],
                            device float* out [[buffer(1)]],
                            uint index [[thread_position_in_grid]]) {
+  out[index] = metal::exp(a[index]);
 }
 
 kernel void EwiseTanhKernel(device const float* a [[buffer(0)]],
                             device float* out [[buffer(1)]],
                             uint index [[thread_position_in_grid]]) {
+  float tmp = metal::tanh(a[index]);
+  out[index] = metal::isnan(tmp) ? 1.0: tmp;
 }
 
 kernel void ReduceMaxKernel(device const float* a [[buffer(0)]],
