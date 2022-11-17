@@ -515,6 +515,16 @@ void Matmul(const MetalArray<scalar_t>& a, const MetalArray<scalar_t>& b,
             MetalArray<scalar_t>* out, uint32_t M, uint32_t N, uint32_t P) {
   BEGIN_COMPUTE_COMMAND("MatmulKernel")
 
+  command_encoder->setBuffer(a.buffer, 0, 0);
+  command_encoder->setBuffer(b.buffer, 0, 1);
+
+  command_encoder->setBuffer(out->buffer, 0, 2);
+
+  MetalArray<uint32_t> dim_arr = VecToMetal<uint32_t>(std::vector<uint32_t>{M, N, P});
+  command_encoder->setBuffer(dim_arr.buffer, 0, 3);
+
+  MetalDims dim = MetalOneDim(M*P);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -523,6 +533,12 @@ void ReduceMax(const MetalArray<scalar_t>& a, MetalArray<scalar_t>* out,
                size_t reduce_size) {
   BEGIN_COMPUTE_COMMAND("ReduceMaxKernel")
 
+  command_encoder->setBuffer(a.buffer, 0, 0);
+  command_encoder->setBuffer(out->buffer, 0, 1);
+  MetalArray<size_t> size_arr = VecToMetal<size_t>(std::vector<size_t>{reduce_size});
+  command_encoder->setBuffer(size_arr.buffer, 0, 2);
+  MetalDims dim = MetalOneDim(a.size/reduce_size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -531,6 +547,14 @@ void ReduceSum(const MetalArray<scalar_t>& a, MetalArray<scalar_t>* out,
                size_t reduce_size) {
   BEGIN_COMPUTE_COMMAND("ReduceSumKernel")
 
+  command_encoder->setBuffer(a.buffer, 0, 0);
+  command_encoder->setBuffer(out->buffer, 0, 1);
+
+  MetalArray<size_t> size_arr = VecToMetal<size_t>(std::vector<size_t>{reduce_size});
+  command_encoder->setBuffer(size_arr.buffer, 0, 2);
+
+  MetalDims dim = MetalOneDim(a.size/reduce_size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -601,8 +625,8 @@ PYBIND11_MODULE(ndarray_backend_metal, m) {
   m.def("ewise_exp", EwiseExp);
   m.def("ewise_tanh", EwiseTanh);
 
-  // m.def("matmul", Matmul);
+  m.def("matmul", Matmul);
 
-  // m.def("reduce_max", ReduceMax);
-  // m.def("reduce_sum", ReduceSum);
+  m.def("reduce_max", ReduceMax);
+  m.def("reduce_sum", ReduceSum);
 }

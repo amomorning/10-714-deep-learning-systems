@@ -169,12 +169,27 @@ kernel void ReduceMaxKernel(device const float* a [[buffer(0)]],
                             device float* out [[buffer(1)]],
                             device const size_t* reduce_size [[buffer(2)]],
                             uint index [[thread_position_in_grid]]) {
+  uint start = index * reduce_size[0];
+  uint end = (index + 1) * reduce_size[0];
+  float val = a[start];
+  for (uint i = start; i < end; i++) {
+    val = metal::max(val, a[i]);
+  }
+  out[index] = val;
 }
 
 kernel void ReduceSumKernel(device const float* a [[buffer(0)]],
                             device float* out [[buffer(1)]],
                             device const size_t* reduce_size [[buffer(2)]],
                             uint index [[thread_position_in_grid]]) {
+                            
+  uint start = index * reduce_size[0];
+  uint end = (index + 1) * reduce_size[0];
+  float val = 0.0;
+  for (uint i = start; i < end; i++) {
+    val += a[i];
+  }
+  out[index] = val;
 }
 
 kernel void MatmulKernel(device const float* a [[buffer(0)]],
@@ -182,4 +197,11 @@ kernel void MatmulKernel(device const float* a [[buffer(0)]],
                          device float* out [[buffer(2)]],
                          device const uint* dim [[buffer(3)]],
                          uint index [[thread_position_in_grid]]) {
+  size_t i = index / dim[2];
+  size_t j = index % dim[2];
+  float v = 0.0;
+  for (size_t k = 0; k < dim[1]; ++ k) {
+    v += a[i * dim[1] + k] * b[k * dim[2] + j];
+  }
+  out[index] = v;
 }
