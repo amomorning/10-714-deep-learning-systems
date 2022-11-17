@@ -13,7 +13,13 @@ kernel void CompactKernel(device const float* a [[buffer(0)]],
                           device const size_t* dim [[buffer(4)]],
                           device const size_t* offset [[buffer(5)]],
                           uint index [[thread_position_in_grid]]) {
-
+  uint i = index;
+  uint pos = offset[0];
+  for (int j = dim[0] - 1; j >= 0; j --) {
+    pos += i % shape[j] * strides[j];
+    i /= shape[j];
+  }
+  out[index] = a[pos];
 }
 
 kernel void EwiseSetitemKernel(device const float* a [[buffer(0)]],
@@ -23,6 +29,13 @@ kernel void EwiseSetitemKernel(device const float* a [[buffer(0)]],
                                device const size_t* dim [[buffer(4)]],
                                device const size_t* offset [[buffer(5)]],
                                uint index [[thread_position_in_grid]]) {
+  uint i = index;
+  uint pos = offset[0];
+  for (int j = dim[0] - 1; j >= 0; j --) {
+    pos += i % shape[j] * strides[j];
+    i /= shape[j];
+  }
+  out[pos] = a[index];
 }
 
 kernel void ScalarSetitemKernel(device float* val [[buffer(0)]],
@@ -32,6 +45,14 @@ kernel void ScalarSetitemKernel(device float* val [[buffer(0)]],
                                 device const size_t* dim [[buffer(4)]],
                                 device const size_t* offset [[buffer(5)]],
                                 uint index [[thread_position_in_grid]]) {
+  uint i = index;
+  uint pos = offset[0];
+  for (int j = dim[0] - 1; j >= 0; j --) {
+    pos += i % shape[j] * strides[j];
+    i /= shape[j];
+  }
+  out[pos] = val[0];
+
 }
 
 kernel void EwiseAddKernel(device const float* a [[buffer(0)]],

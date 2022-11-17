@@ -203,7 +203,23 @@ void Compact(const MetalArray<scalar_t>& a, MetalArray<scalar_t>* out,
              std::vector<uint32_t> shape, std::vector<uint32_t> strides,
              size_t offset) {
   BEGIN_COMPUTE_COMMAND("CompactKernel")
+  command_encoder->setBuffer(a.buffer, 0, 0);
+  command_encoder->setBuffer(out->buffer, 0, 1);
 
+  MetalArray<uint32_t> shape_arr = VecToMetal<uint32_t>(shape);
+  command_encoder->setBuffer(shape_arr.buffer, 0, 2);
+
+  MetalArray<uint32_t> strides_arr = VecToMetal<uint32_t>(strides);
+  command_encoder->setBuffer(strides_arr.buffer, 0, 3);
+
+  MetalArray<size_t> dim_arr = VecToMetal<size_t>(std::vector<size_t>{shape.size()});
+  command_encoder->setBuffer(dim_arr.buffer, 0, 4);
+
+  MetalArray<size_t> offset_arr = VecToMetal<size_t>(std::vector<size_t>{offset});
+  command_encoder->setBuffer(offset_arr.buffer, 0, 5);
+
+  MetalDims dim = MetalOneDim(out->size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group);
 
   END_COMPUTE_COMMAND
 }
@@ -214,7 +230,23 @@ void EwiseSetitem(const MetalArray<scalar_t>& a, MetalArray<scalar_t>* out,
                   std::vector<uint32_t> shape, std::vector<uint32_t> strides,
                   size_t offset) {
   BEGIN_COMPUTE_COMMAND("EwiseSetitemKernel")
+   command_encoder->setBuffer(a.buffer, 0, 0);
+  command_encoder->setBuffer(out->buffer, 0, 1);
 
+  MetalArray<uint32_t> shape_arr = VecToMetal<uint32_t>(shape);
+  command_encoder->setBuffer(shape_arr.buffer, 0, 2);
+
+  MetalArray<uint32_t> strides_arr = VecToMetal<uint32_t>(strides);
+  command_encoder->setBuffer(strides_arr.buffer, 0, 3);
+
+  MetalArray<size_t> dim_arr = VecToMetal<size_t>(std::vector<size_t>{shape.size()});
+  command_encoder->setBuffer(dim_arr.buffer, 0, 4);
+
+  MetalArray<size_t> offset_arr = VecToMetal<size_t>(std::vector<size_t>{offset});
+  command_encoder->setBuffer(offset_arr.buffer, 0, 5);
+
+  MetalDims dim = MetalOneDim(a.size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group); 
 
   END_COMPUTE_COMMAND
 }
@@ -223,6 +255,26 @@ void ScalarSetitem(size_t size, scalar_t val, MetalArray<scalar_t>* out,
                    std::vector<uint32_t> shape, std::vector<uint32_t> strides,
                    size_t offset) {
   BEGIN_COMPUTE_COMMAND("ScalarSetitemKernel")
+
+  MetalArray<scalar_t> val_arr = VecToMetal<scalar_t>(std::vector<scalar_t>{val});
+  command_encoder->setBuffer(val_arr.buffer, 0, 0);
+
+  command_encoder->setBuffer(out->buffer, 0, 1);
+
+  MetalArray<uint32_t> shape_arr = VecToMetal<uint32_t>(shape);
+  command_encoder->setBuffer(shape_arr.buffer, 0, 2);
+
+  MetalArray<uint32_t> strides_arr = VecToMetal<uint32_t>(strides);
+  command_encoder->setBuffer(strides_arr.buffer, 0, 3);
+
+  MetalArray<size_t> dim_arr = VecToMetal<size_t>(std::vector<size_t>{shape.size()});
+  command_encoder->setBuffer(dim_arr.buffer, 0, 4);
+
+  MetalArray<size_t> offset_arr = VecToMetal<size_t>(std::vector<size_t>{offset});
+  command_encoder->setBuffer(offset_arr.buffer, 0, 5);
+
+  MetalDims dim = MetalOneDim(size);
+  command_encoder->dispatchThreads(dim.num_threads_per_grid, dim.num_threads_per_group); 
 
 
   END_COMPUTE_COMMAND
@@ -434,8 +486,8 @@ PYBIND11_MODULE(ndarray_backend_metal, m) {
 
   m.def("fill", Fill);
   m.def("compact", Compact);
-  // m.def("ewise_setitem", EwiseSetitem);
-  // m.def("scalar_setitem", ScalarSetitem);
+  m.def("ewise_setitem", EwiseSetitem);
+  m.def("scalar_setitem", ScalarSetitem);
   m.def("ewise_add", EwiseAdd);
   m.def("scalar_add", ScalarAdd);
 
