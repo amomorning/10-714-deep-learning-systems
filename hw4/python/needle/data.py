@@ -131,7 +131,7 @@ class DataLoader:
     def __next__(self):
         ### BEGIN YOUR SOLUTION
         idx = next(self.ordering)
-        return [Tensor.make_const(x, requires_grad=False) for x in self.dataset[idx]]
+        return [Tensor(x) for x in self.dataset[idx]]
         ### END YOUR SOLUTION
 
 
@@ -194,9 +194,6 @@ class CIFAR10Dataset(Dataset):
                 batch = pickle.load(f, encoding='bytes')
                 X, y = batch[b'data'], batch[b'labels']
                 X = X.reshape(-1, 3, 32, 32).astype('float32') / 255
-                if not train:
-                    self.X, self.y = X, y
-                    return
                 all_X.append(X)
                 all_y.append(y)
         self.X = np.concatenate(all_X, axis=0)
@@ -209,6 +206,9 @@ class CIFAR10Dataset(Dataset):
         Image should be of shape (3, 32, 32)
         """
         ### BEGIN YOUR SOLUTION
+        print(index)
+        print(type(index))
+        print(self.y[index])
         return self.apply_transforms(self.X[index]), self.y[index]
         ### END YOUR SOLUTION
 

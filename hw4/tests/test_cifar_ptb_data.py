@@ -88,10 +88,16 @@ def mugrade_submit(x):
 
 
 def submit_cifar10():
-    if not ndl.cuda().enabled():
+    devices = [ndl.cpu()]
+    if ndl.metal().enabled():
+        devices.append(ndl.metal())
+    elif ndl.cuda().enabled():
+        devices.append(ndl.cuda())
+    else:
         print('You need a GPU to run some of these tests.')
-    devices = [ndl.cpu(), ndl.cuda()]
+
     for train in TRAIN:
+        print('train: ', train)
         dataset = ndl.data.CIFAR10Dataset("data/cifar-10-batches-py", train=train)
         mugrade_submit(len(dataset))
         for (device, batch_size) in itertools.product(devices, TEST_BATCH_SIZES):
@@ -100,11 +106,18 @@ def submit_cifar10():
                 break
             mugrade_submit(X.numpy()[0, :, :, :])
             mugrade_submit(y.numpy()[0])
+        print('submit ok')
 
 
 def submit_ptb():
     # devices = [ndl.cpu(), ndl.cuda()] if ndl.cuda().enabled() else [ndl.cpu()]
-    devices = [ndl.cpu(), ndl.cuda()]
+    devices = [ndl.cpu()]
+    if ndl.metal().enabled():
+        devices.append(ndl.metal())
+    elif ndl.cuda().enabled():
+        devices.append(ndl.cuda())
+    else:
+        print('You need a GPU to run some of these tests.')
 
     corpus = ndl.data.Corpus("data/ptb")
     mugrade_submit(np.array(len(corpus.dictionary)))

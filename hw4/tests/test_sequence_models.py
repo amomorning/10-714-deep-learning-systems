@@ -270,9 +270,12 @@ def mugrade_submit(x):
 
 def submit_rnn():
     #devices = [ndl.cpu(), ndl.cuda()] if ndl.cuda().enabled() else [ndl.cpu()]
-    devices = [ndl.cpu(), ndl.cuda()]
-
-    if not ndl.cuda().enabled():
+    devices = [ndl.cpu()]
+    if ndl.metal().enabled():
+        devices.append(ndl.metal())
+    elif ndl.cuda().enabled():
+        devices.append(ndl.cuda())
+    else:
         print('You need a GPU to run some of these tests.')
 
     for (device, batch_size, input_size, hidden_size) in itertools.product(
@@ -300,9 +303,14 @@ def submit_rnn():
 
 def submit_lstm():
     #devices = [ndl.cpu(), ndl.cuda()] if ndl.cuda().enabled() else [ndl.cpu()]
-    devices = [ndl.cpu(), ndl.cuda()]
-    if not ndl.cuda().enabled():
+    devices = [ndl.cpu()]
+    if ndl.metal().enabled():
+        devices.append(ndl.metal())
+    elif ndl.cuda().enabled():
+        devices.append(ndl.cuda())
+    else:
         print('You need a GPU to run some of these tests.')
+
     for (device, batch_size, input_size, hidden_size) in itertools.product(
         devices, TEST_BATCH_SIZES, TEST_INPUT_SIZES, TEST_HIDDEN_SIZES):
         x = np.random.randn(batch_size, input_size).astype(np.float32)
@@ -332,9 +340,14 @@ def submit_lstm():
 
 def submit_language_model():
     #devices = [ndl.cpu(), ndl.cuda()] if ndl.cuda().enabled() else [ndl.cpu()]
-    devices = [ndl.cpu(), ndl.cuda()]
-    if not ndl.cuda().enabled():
+    devices = [ndl.cpu()]
+    if ndl.metal().enabled():
+        devices.append(ndl.metal())
+    elif ndl.cuda().enabled():
+        devices.append(ndl.cuda())
+    else:
         print('You need a GPU to run some of these tests.')
+
     for (device, seq_length, num_layers, batch_size, embedding_size, hidden_size, seq_model, output_size) in itertools.product(
         devices, TEST_SEQ_LENGTHS, TEST_NUM_LAYERS, TEST_BATCH_SIZES, TEST_EMBEDDING_SIZES, TEST_HIDDEN_SIZES, TEST_SEQ_MODEL, TEST_OUTPUT_SIZES):
         x = np.random.randint(0, output_size, (seq_length, batch_size)).astype(np.float32)

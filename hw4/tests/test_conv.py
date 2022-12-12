@@ -510,6 +510,8 @@ def Rand(*shape, device=ndl.cpu(), entropy=1):
 def RandC(*shape, entropy=1):
     if ndl.cuda().enabled():
         return Rand(*shape, device=ndl.cuda(), entropy=2)
+    elif ndl.metal().enabled():
+        return Rand(*shape, device=ndl.metal(), entropy=2)
     else:
         raise NotImplementedError("You need a GPU to run these tests.")
 
@@ -551,6 +553,9 @@ def submit_conv_forward():
     if ndl.cuda().enabled():
         MugradeSubmit(DoConvLayer(3, 2, 4, 6, k=3, stride=1, bias=False, device=ndl.cuda()))
         MugradeSubmit(DoConvLayer(3, 4, 2, 6, k=3, stride=1, bias=False, device=ndl.cuda()))
+    elif ndl.metal().enabled():
+        MugradeSubmit(DoConvLayer(3, 2, 4, 6, k=3, stride=1, bias=False, device=ndl.metal()))
+        MugradeSubmit(DoConvLayer(3, 4, 2, 6, k=3, stride=1, bias=False, device=ndl.metal()))
     else:
         print('You need a GPU to run these tests!')
 
@@ -602,6 +607,9 @@ def submit_conv_backward():
     if ndl.cuda().enabled():
         MugradeSubmit(DoConvLayerBackward(3, 2, 4, 6, k=3, stride=1, bias=False, wrtX=True, device=ndl.cuda()))
         MugradeSubmit(DoConvLayerBackward(3, 4, 2, 6, k=3, stride=1, bias=False, wrtX=False, device=ndl.cuda()))
+    elif ndl.metal().enabled():
+        MugradeSubmit(DoConvLayerBackward(3, 2, 4, 6, k=3, stride=1, bias=False, wrtX=True, device=ndl.metal()))
+        MugradeSubmit(DoConvLayerBackward(3, 4, 2, 6, k=3, stride=1, bias=False, wrtX=False, device=ndl.metal()))
     else:
         print('You need a GPU to run these tests!')
 
