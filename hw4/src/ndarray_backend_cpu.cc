@@ -444,6 +444,7 @@ namespace needle
        */
       /// BEGIN YOUR SOLUTION
       AlignedArray buffer(TILE * TILE);
+      Fill(out, 0);
 
       for (int i = 0; i < m / TILE; ++i)
       {

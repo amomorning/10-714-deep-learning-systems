@@ -94,16 +94,17 @@ MetalArray<T>::~MetalArray() {
 }
 
 MyMetal* MyMetal::GetInstance() {
-  static std::shared_ptr<MyMetal> instance = nullptr;
+  static std::atomic<MyMetal*> instance = nullptr;
   static std::mutex mutex{};
-  if (instance == nullptr) {
-    mutex.lock();
-    if (instance == nullptr) {
-      instance = std::shared_ptr<MyMetal>(new MyMetal);
+  MyMetal* p = instance.load(std::memory_order_acquire);
+  if (p == nullptr) {
+    std::lock_guard<std::mutex> guard(mutex);
+    if (!(p = instance.load(std::memory_order_relaxed))) {
+      p = new MyMetal;
+      instance.store(p, std::memory_order_release);
     }
-    mutex.unlock();
   }
-  return instance.get();
+  return p;
 }
 
 MyMetal::MyMetal() {
@@ -185,14 +186,14 @@ MyMetal::GetComputePipelineState(const std::string& kernel_name) {
   command_encoder->release();                                                  \
   command_buffer->release();
 
-void Fill(MetalArray<scalar_t>* out, scalar_t val, size_t size) {
+void Fill(MetalArray<scalar_t>* out, scalar_t val) {
   BEGIN_COMPUTE_COMMAND("FillKernel")
 
   command_encoder->setBuffer(out->buffer, 0, 0);
   MetalArray<scalar_t> val_arr =
       VecToMetal<scalar_t>(std::vector<scalar_t>{val});
   command_encoder->setBuffer(val_arr.buffer, 0, 1);
-  MetalDims dim = MetalOneDim(size);
+  MetalDims dim = MetalOneDim(out->size);
   command_encoder->dispatchThreads(dim.num_threads_per_grid,
                                    dim.num_threads_per_group);
 

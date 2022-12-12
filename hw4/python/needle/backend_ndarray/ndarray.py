@@ -55,13 +55,13 @@ class BackendDevice:
         return arr
 
 def metal():
-     """Return metal device"""
-     try:
-         from . import ndarray_backend_metal
+    """Return metal device"""
+    try:
+        from . import ndarray_backend_metal
 
-         return BackendDevice("metal", ndarray_backend_metal)
-     except ImportError:
-         return BackendDevice("metal", None)
+        return BackendDevice("metal", ndarray_backend_metal)
+    except ImportError:
+        return BackendDevice("metal", None)
 
 
 def cuda():
@@ -563,8 +563,10 @@ class NDArray:
 
         if axis is None:
             view = self.compact().reshape((1,) * (self.ndim - 1) + (prod(self.shape),))
-            #out = NDArray.make((1,) * self.ndim, device=self.device)
-            out = NDArray.make((1,), device=self.device)
+            if keepdims:
+                out = NDArray.make((1,) * self.ndim, device=self.device)
+            else:
+                out = NDArray.make((1,), device=self.device)
 
         else:
             if isinstance(axis, (tuple, list)):

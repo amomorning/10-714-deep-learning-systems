@@ -269,9 +269,12 @@ def mugrade_submit(x):
 
 def submit_new_nd_backend():
     #devices = [ndl.cpu(), ndl.cuda()] if ndl.cuda().enabled() else [ndl.cpu()]
-    devices = [ndl.cpu(), ndl.cuda()]
-
-    if not ndl.cuda().enabled():
+    devices = [ndl.cpu()]
+    if ndl.metal().enabled():
+        devices.append(ndl.metal())
+    elif ndl.cuda().enabled():
+        devices.append(ndl.cuda())
+    else:
         print('You need a GPU to run some of these tests.')
         
     # ewise fn

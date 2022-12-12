@@ -363,7 +363,7 @@ def compute_gradient_of_variables(output_tensor, out_grad):
     Store the computed result in the grad field of each Variable.
     """
     # a map from node to a list of gradient contributions from each output node
-    node_to_output_grads_list: Dict[Tensor, List[Tensor]] = defaultdict(list)
+    node_to_output_grads_list: Dict[Tensor, List[Tensor]] = {}
     # Special note on initializing gradient of
     # We are really taking a derivative of the scalar reduce_sum(output_node)
     # instead of the vector output_node. But this is the common case for loss function.
@@ -372,14 +372,21 @@ def compute_gradient_of_variables(output_tensor, out_grad):
     reverse_topo_order = list(reversed(find_topo_sort([output_tensor])))
 
     ### BEGIN YOUR SOLUTION
-    for node in reverse_topo_order:
-        adjoint = sum_node_list(node_to_output_grads_list[node])
-        partial_adjoints = [adjoint] if node.is_leaf() else node.op.gradient_as_tuple(adjoint, node)
-        for input_node, partial_adjoint in zip(node.inputs, partial_adjoints):
-            node_to_output_grads_list[input_node].append(partial_adjoint)
-
-    for node, partial_adjoints in node_to_output_grads_list.items():
-        node.grad = sum_node_list(partial_adjoints)
+    for tensor in reverse_topo_order:
+        if not tensor in node_to_output_grads_list:
+            continue
+        tensor.grad = sum_node_list(node_to_output_grads_list[tensor])
+        if tensor.op:
+            def get_gradient_as_list():
+                gradient = tensor.op.gradient(tensor.grad, tensor)
+                if isinstance(gradient, tuple):
+                    return list(gradient)
+                return [gradient]
+            for input, grad in zip(tensor.inputs, get_gradient_as_list()):
+                if not input in node_to_output_grads_list:
+                    node_to_output_grads_list.update({input: [grad]})
+                else:
+                    node_to_output_grads_list[input].append(grad)
     ### END YOUR SOLUTION
 
 
