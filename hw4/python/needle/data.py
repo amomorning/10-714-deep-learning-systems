@@ -4,7 +4,7 @@ import os
 import pickle
 from typing import Iterator, Optional, List, Sized, Union, Iterable, Any
 from needle import backend_ndarray as nd
-
+import gzip
 
 class Transform:
     def __call__(self, x):
@@ -26,7 +26,9 @@ class RandomFlipHorizontal(Transform):
         """
         flip_img = np.random.rand() < self.p
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if flip_img:
+            img = np.flip(img, 1)
+        return img        
         ### END YOUR SOLUTION
 
 
@@ -46,7 +48,18 @@ class RandomCrop(Transform):
             low=-self.padding, high=self.padding + 1, size=2
         )
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        x, y = abs(shift_x), abs(shift_y)
+        h, w = img.shape[0], img.shape[1]
+
+        paddings = [(0, 0)] * len(img.shape)
+        paddings[0] = (x, x)
+        paddings[1] = (y, y)
+        img = np.pad(img, tuple(paddings))
+
+        img = img[:h, :] if shift_x < 0 else img[-h:, :]
+        img = img[:, :w] if shift_y < 0 else img[:, -w:]
+
+        return img
         ### END YOUR SOLUTION
 
 
@@ -106,13 +119,19 @@ class DataLoader:
 
     def __iter__(self):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        indices = np.arange(len(self.dataset))
+        if self.shuffle:
+            np.random.shuffle(indices)
+        self.ordering = np.array_split(indices, range(self.batch_size, len(self.dataset), self.batch_size))
+
+        self.ordering = iter(self.ordering)
         ### END YOUR SOLUTION
         return self
 
     def __next__(self):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        idx = next(self.ordering)
+        return [Tensor.make_const(x, requires_grad=False) for x in self.dataset[idx]]
         ### END YOUR SOLUTION
 
 
@@ -124,17 +143,26 @@ class MNISTDataset(Dataset):
         transforms: Optional[List] = None,
     ):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        with gzip.open(image_filename) as f:
+            X = np.frombuffer(f.read(), 'B', offset=16)
+            X = X.reshape(-1, 28, 28, 1).astype('float32') / 255
+        with gzip.open(label_filename, 'r') as f:
+            y = np.frombuffer(f.read(), 'B', offset=8)
+        self.transforms = transforms
+
+        # X = self.apply_transforms(X)
+        self.X = X
+        self.y = y
         ### END YOUR SOLUTION
 
     def __getitem__(self, index) -> object:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return self.apply_transforms(self.X[index]), self.y[index]
         ### END YOUR SOLUTION
 
     def __len__(self) -> int:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return len(self.X)
         ### END YOUR SOLUTION
 
 
@@ -156,7 +184,23 @@ class CIFAR10Dataset(Dataset):
         y - numpy array of labels
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        super().__init__(transforms)
+
+        files = [ f'data_batch_{i+1}' for i in range(5)] if train else ['test_batch']
+        all_X, all_y = [], []
+        for f in files:
+            filename = os.path.join(base_folder, f)
+            with open(filename, 'rb') as f:
+                batch = pickle.load(f, encoding='bytes')
+                X, y = batch[b'data'], batch[b'labels']
+                X = X.reshape(-1, 3, 32, 32).astype('float32') / 255
+                if not train:
+                    self.X, self.y = X, y
+                    return
+                all_X.append(X)
+                all_y.append(y)
+        self.X = np.concatenate(all_X, axis=0)
+        self.y = np.concatenate(all_y, axis=0)
         ### END YOUR SOLUTION
 
     def __getitem__(self, index) -> object:
@@ -165,7 +209,7 @@ class CIFAR10Dataset(Dataset):
         Image should be of shape (3, 32, 32)
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return self.apply_transforms(self.X[index]), self.y[index]
         ### END YOUR SOLUTION
 
     def __len__(self) -> int:
@@ -173,7 +217,7 @@ class CIFAR10Dataset(Dataset):
         Returns the total number of examples in the dataset
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return self.X.shape[0]
         ### END YOUR SOLUTION
 
 
