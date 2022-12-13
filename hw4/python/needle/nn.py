@@ -104,7 +104,7 @@ class Flatten(Module):
     def forward(self, X):
         ### BEGIN YOUR SOLUTION
         bsz, *other_dims = X.shape
-        return X.reshape((bsz, np.prod(other_dims)))
+        return ops.reshape(X, (bsz, np.prod(other_dims)))
         ### END YOUR SOLUTION
 
 
@@ -128,7 +128,7 @@ class Sigmoid(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return ops.power_scalar(ops.add_scalar(ops.exp(-x), 1), scalar=-1)
         ### END YOUR SOLUTION
 
 
@@ -149,7 +149,8 @@ class SoftmaxLoss(Module):
     def forward(self, logits: Tensor, y: Tensor):
         ### BEGIN YOUR SOLUTION
         m, k = logits.shape
-        ans = ops.logsumexp(logits, axes=(1,)) - (logits * init.one_hot(k, y)).sum((1,))
+        y_one_hot = init.one_hot(k, y, device=logits.device)
+        ans = ops.logsumexp(logits, axes=(1,)) - (logits * y_one_hot).sum((1,))
         return ans.sum() / m
         ### END YOUR SOLUTION
 
@@ -254,7 +255,7 @@ class Residual(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return self.fn(x) + x
         ### END YOUR SOLUTION
 
 class Conv(Module):

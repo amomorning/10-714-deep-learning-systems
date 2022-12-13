@@ -214,7 +214,7 @@ class Reshape(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        return array_api.reshape(a, self.shape)
+        return array_api.reshape(a.compact(), self.shape)
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
@@ -366,8 +366,8 @@ class ReLU(TensorOp):
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
         data = node.realize_cached_data()
-        data = array_api.ones_like(data) * (data > 0)
-        return (out_grad * Tensor(data), )
+        data = (data > 0)
+        return (out_grad * Tensor(data, device = out_grad.device), )
         ### END YOUR SOLUTION
 
 
@@ -393,7 +393,7 @@ class LogSumExp(TensorOp):
         ZMAX = Z.max(axis=self.axes, keepdims=True)
         shape = ZMAX.shape
         dom = array_api.reshape(array_api.summation(array_api.exp(Z - ZMAX.broadcast_to(Z.shape)), axis=self.axes), shape)
-        return (Tensor.make_const(array_api.exp(Z - ZMAX.broadcast_to(Z.shape)) / dom.broadcast_to(Z.shape)) * out_grad.reshape(shape).broadcast_to(Z.shape),)
+        return (Tensor(array_api.exp(Z - ZMAX.broadcast_to(Z.shape)) / dom.broadcast_to(Z.shape), device=node.inputs[0].device) * out_grad.reshape(shape).broadcast_to(Z.shape),)
         ### END YOUR SOLUTION
 
 
