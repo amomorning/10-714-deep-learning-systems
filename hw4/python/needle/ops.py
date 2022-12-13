@@ -500,12 +500,23 @@ class Dilate(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_shape = list(a.shape)
+        index = []
+        for i in range(a.ndim):
+            if i in self.axes:
+                new_shape[i] *= self.dilation + 1
+                index.append(slice(0, new_shape[i], self.dilation + 1))
+            else:
+                index.append(slice(0, new_shape[i], 1))
+        ret = NDArray.make(new_shape, device=a.device)
+        ret.fill(0)
+        ret[tuple(index)] = a
+        return ret
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return undilate(out_grad, self.axes, self.dilation)
         ### END YOUR SOLUTION
 
 
@@ -519,12 +530,23 @@ class UnDilate(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_shape = list(a.shape)
+        res_index, index = [], []
+        for i in range(a.ndim):
+            if i in self.axes:
+                index.append(slice(0, new_shape[i], self.dilation + 1))
+                new_shape[i] //= self.dilation + 1
+            else:
+                index.append(slice(0, new_shape[i], 1))
+            res_index.append(slice(0, new_shape[i], 1))
+        ret = NDArray.make(new_shape, device=a.device)
+        ret[tuple(res_index)] = a[tuple(index)]
+        return ret
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return dilate(out_grad, self.axes, self.dilation)
         ### END YOUR SOLUTION
 
 
