@@ -80,41 +80,45 @@ class Identity(Module):
 
 
 class Linear(Module):
-    def __init__(
-        self, in_features, out_features, bias=True, device=None, dtype="float32"
-    ):
+    def __init__(self, in_features, out_features, bias=True, device=None, dtype="float32"):
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.weight = Parameter(init.kaiming_uniform(in_features, out_features, device=device, dtype=dtype))
+        if bias:
+            self.bias = Parameter(init.kaiming_uniform(out_features, 1, device=device, dtype=dtype).transpose())
         ### END YOUR SOLUTION
 
     def forward(self, X: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if self.bias:
+            return X @ self.weight + self.bias.broadcast_to((X.shape[0], self.out_features))
+        else:
+            return X @ self.weight
         ### END YOUR SOLUTION
 
 
 class Flatten(Module):
     def forward(self, X):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        bsz, *other_dims = X.shape
+        return X.reshape((bsz, np.prod(other_dims)))
         ### END YOUR SOLUTION
 
 
 class ReLU(Module):
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return ops.relu(x)
         ### END YOUR SOLUTION
 
 
 class Tanh(Module):
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return ops.tanh(x)
         ### END YOUR SOLUTION
 
 
@@ -135,14 +139,18 @@ class Sequential(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        for m in self.modules:
+            x = m.forward(x)
+        return x
         ### END YOUR SOLUTION
 
 
 class SoftmaxLoss(Module):
     def forward(self, logits: Tensor, y: Tensor):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        m, k = logits.shape
+        ans = ops.logsumexp(logits, axes=(1,)) - (logits * init.one_hot(k, y)).sum((1,))
+        return ans.sum() / m
         ### END YOUR SOLUTION
 
 
@@ -153,12 +161,29 @@ class BatchNorm1d(Module):
         self.eps = eps
         self.momentum = momentum
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.weight = Parameter(init.ones(dim, device=device, dtype=dtype, requires_grad=True))
+        self.bias = Parameter(init.zeros(dim, device=device, dtype=dtype, requires_grad=True))
+        self.running_mean = init.zeros(dim, device=device, dtype=dtype)
+        self.running_var = init.ones(dim, device=device, dtype=dtype)
         ### END YOUR SOLUTION
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        n, k = x.shape
+        if self.training:
+            mean = x.sum(axes=(0, )) / n
+            self.running_mean.data = ((1 - self.momentum) * self.running_mean + self.momentum * mean).data
+            mean = mean.reshape((1, k)).broadcast_to(x.shape)
+            var = ((x - mean) ** 2).sum(axes=(0,)) / n
+            self.running_var.data = ((1 - self.momentum) * self.running_var + self.momentum * var).data
+            var = var.reshape((1, k)).broadcast_to(x.shape)
+        else:
+            mean = self.running_mean.reshape((1, k)).broadcast_to(x.shape)
+            var = self.running_var.reshape((1, k)).broadcast_to(x.shape)
+        weight = self.weight.reshape((1, k)).broadcast_to(x.shape)
+        bias = self.bias.reshape((1, k)).broadcast_to(x.shape)
+        return weight * (x - mean) / ((var + self.eps) ** 0.5) + bias
+
         ### END YOUR SOLUTION
 
 
@@ -180,12 +205,20 @@ class LayerNorm1d(Module):
         self.dim = dim
         self.eps = eps
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.weight = Parameter(init.ones(dim, device=device, dtype=dtype, requires_grad=True))
+        self.bias = Parameter(init.zeros(dim, device=device, dtype=dtype, requires_grad=True))
         ### END YOUR SOLUTION
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        n, k = x.shape
+        mean = x.sum(axes=(1, )) / k
+        mean = mean.reshape((n, 1)).broadcast_to(x.shape)
+        var = ((x - mean) ** 2).sum(axes=(1, )) / k
+        var = var.reshape((n, 1)).broadcast_to(x.shape)
+        weight = self.weight.reshape((1, k)).broadcast_to(x.shape)
+        bias = self.bias.reshape((1, k)).broadcast_to(x.shape)
+        return weight * (x - mean) / ((var + self.eps) ** 0.5) + bias
         ### END YOUR SOLUTION
 
 
@@ -196,7 +229,21 @@ class Dropout(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if not self.training:
+            return x
+        mask = init.randb(*x.shape, p=1 - self.p)
+        return x * mask / (1 - self.p)
+        ### END YOUR SOLUTION
+
+
+class Residual(Module):
+    def __init__(self, fn: Module):
+        super().__init__()
+        self.fn = fn
+
+    def forward(self, x: Tensor) -> Tensor:
+        ### BEGIN YOUR SOLUTION
+        return self.fn(x) + x
         ### END YOUR SOLUTION
 
 
@@ -230,12 +277,26 @@ class Conv(Module):
         self.stride = stride
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        K, I, O = kernel_size, in_channels, out_channels
+        self.weight = Parameter(init.kaiming_uniform(K*K*I, K*K*O, (K, K, I, O), device=device, dtype=dtype)) 
+
+        
+        alpha = 1.0 / (K*K*I) ** 0.5
+        self.bias = Parameter(init.rand(O, low=-alpha, high=alpha, device=device, dtype=dtype)) if bias else None
         ### END YOUR SOLUTION
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        # nchw -> nhcw -> nhwc
+        s = x.shape
+        _x = x.transpose((1, 2)).transpose((2, 3))
+        out = ops.conv(_x, self.weight, stride = self.stride, padding = self.kernel_size // 2)
+        out = out.transpose((2, 3)).transpose((1, 2))
+        
+        if self.bias:
+            bias = ops.broadcast_to(ops.reshape(self.bias, shape=(1,self.out_channels,1,1)), out.shape)
+            out += bias
+        return out
         ### END YOUR SOLUTION
 
 

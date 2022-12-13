@@ -259,7 +259,13 @@ class Summation(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        return array_api.summation(a, axis=self.axes)
+        if isinstance(self.axes, (tuple, list)):
+            tmp = a
+            for axis in sorted(self.axes, reverse=True):
+                tmp = array_api.summation(tmp, axis=axis)
+            return tmp
+        else:
+            return array_api.summation(a, axis=self.axes)
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
@@ -561,12 +567,48 @@ class Conv(TensorOp):
 
     def compute(self, A, B):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        S, P = self.stride, self.padding
+        if P > 0: A = A.pad(((0, 0), (P, P), (P, P), (0, 0)))
+
+        N, H_in, W_in, C_in = A.shape
+        K, _, _, C_out = B.shape
+        H_out, W_out = (H_in - K) // S + 1, (W_in - K) // S + 1
+        
+        N_s, H_s, W_s, C_s = A.strides
+        inner_dim = K * K * C_in
+        A_s = A.as_strided(shape=(N, H_out, W_out, K, K, C_in), strides = (N_s, H_s*S, W_s*S, H_s, W_s, C_s))
+        A_s = A_s.compact().reshape((N*H_out*W_out, inner_dim))
+        out = A_s @ B.compact().reshape((inner_dim, C_out))
+        return out.reshape((N, H_out, W_out, C_out))
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        S, P = self.stride, self.padding
+        A, B = node.inputs
+        K, _, _, C_out = B.shape
+
+        if self.stride > 1:
+            out_grad = dilate(out_grad, axes=(1,2), dilation=self.stride-1)
+
+        # A.grad
+        
+        # print(f'{A.shape=}')
+        # print(f'{out_grad.shape=}')
+        B_transpose_flip = transpose(flip(B, (0, 1)), (2, 3))
+        # print(f'{B_transpose_flip.shape=}')
+        new_padding = K - P - 1
+        A_grad = conv(out_grad, B_transpose_flip, padding=new_padding)
+        # print(f'{A_grad.shape=}')
+
+        A_transpose = transpose(transpose(A, (1, 2)), (0, 3))
+        # print(f'{A_transpose.shape=}')
+        out_grad_transpose = transpose(out_grad, (0, 2))
+        # print(f'{out_grad_transpose.shape=}')
+        B_grad = conv(A_transpose, out_grad_transpose, padding=P)
+        B_grad = transpose(B_grad, (0, 2))
+        # print(f'{B_grad.shape=}')
+        return (A_grad, B_grad)
         ### END YOUR SOLUTION
 
 
