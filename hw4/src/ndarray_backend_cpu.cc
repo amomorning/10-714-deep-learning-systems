@@ -47,8 +47,8 @@ namespace needle
       }
     }
 
-    void Compact(const AlignedArray &a, AlignedArray *out, std::vector<uint32_t> shape,
-                 std::vector<uint32_t> strides, size_t offset)
+    void Compact(const AlignedArray& a, AlignedArray* out, std::vector<int32_t> shape,
+             std::vector<int32_t> strides, size_t offset)
     {
       /**
        * Compact an array in memory
@@ -96,8 +96,8 @@ namespace needle
       /// END YOUR SOLUTION
     }
 
-    void EwiseSetitem(const AlignedArray &a, AlignedArray *out, std::vector<uint32_t> shape,
-                      std::vector<uint32_t> strides, size_t offset)
+    void EwiseSetitem(const AlignedArray& a, AlignedArray* out, std::vector<int32_t> shape,
+                  std::vector<int32_t> strides, size_t offset)
     {
       /**
        * Set items in a (non-compact) array
@@ -141,8 +141,8 @@ namespace needle
       /// END YOUR SOLUTION
     }
 
-    void ScalarSetitem(const size_t size, scalar_t val, AlignedArray *out, std::vector<uint32_t> shape,
-                       std::vector<uint32_t> strides, size_t offset)
+    void ScalarSetitem(const size_t size, scalar_t val, AlignedArray* out, std::vector<int32_t> shape,
+                   std::vector<int32_t> strides, size_t offset)
     {
       /**
        * Set items is a (non-compact) array
@@ -514,8 +514,7 @@ namespace needle
   } // namespace cpu
 } // namespace needle
 
-PYBIND11_MODULE(ndarray_backend_cpu, m)
-{
+PYBIND11_MODULE(ndarray_backend_cpu, m) {
   namespace py = pybind11;
   using namespace needle;
   using namespace cpu;
@@ -530,17 +529,18 @@ PYBIND11_MODULE(ndarray_backend_cpu, m)
 
   // return numpy array (with copying for simplicity, otherwise garbage
   // collection is a pain)
-  m.def("to_numpy", [](const AlignedArray &a, std::vector<size_t> shape,
-                       std::vector<size_t> strides, size_t offset)
-        {
+  m.def("to_numpy", [](const AlignedArray& a, std::vector<size_t> shape,
+                       std::vector<size_t> strides, size_t offset) {
     std::vector<size_t> numpy_strides = strides;
     std::transform(numpy_strides.begin(), numpy_strides.end(), numpy_strides.begin(),
                    [](size_t& c) { return c * ELEM_SIZE; });
-    return py::array_t<scalar_t>(shape, numpy_strides, a.ptr + offset); });
+    return py::array_t<scalar_t>(shape, numpy_strides, a.ptr + offset);
+  });
 
   // convert from numpy (with copying)
-  m.def("from_numpy", [](py::array_t<scalar_t> a, AlignedArray *out)
-        { std::memcpy(out->ptr, a.request().ptr, out->size * ELEM_SIZE); });
+  m.def("from_numpy", [](py::array_t<scalar_t> a, AlignedArray* out) {
+    std::memcpy(out->ptr, a.request().ptr, out->size * ELEM_SIZE);
+  });
 
   m.def("fill", Fill);
   m.def("compact", Compact);

@@ -201,16 +201,16 @@ void Fill(MetalArray<scalar_t>* out, scalar_t val) {
 }
 
 void Compact(const MetalArray<scalar_t>& a, MetalArray<scalar_t>* out,
-             std::vector<uint32_t> shape, std::vector<uint32_t> strides,
+             std::vector<int32_t> shape, std::vector<int32_t> strides,
              size_t offset) {
   BEGIN_COMPUTE_COMMAND("CompactKernel")
   command_encoder->setBuffer(a.buffer, 0, 0);
   command_encoder->setBuffer(out->buffer, 0, 1);
 
-  MetalArray<uint32_t> shape_arr = VecToMetal<uint32_t>(shape);
+  MetalArray<int32_t> shape_arr = VecToMetal<int32_t>(shape);
   command_encoder->setBuffer(shape_arr.buffer, 0, 2);
 
-  MetalArray<uint32_t> strides_arr = VecToMetal<uint32_t>(strides);
+  MetalArray<int32_t> strides_arr = VecToMetal<int32_t>(strides);
   command_encoder->setBuffer(strides_arr.buffer, 0, 3);
 
   MetalArray<size_t> dim_arr = VecToMetal<size_t>(std::vector<size_t>{shape.size()});
@@ -228,16 +228,16 @@ void Compact(const MetalArray<scalar_t>& a, MetalArray<scalar_t>* out,
 // ************ begin your implementation below this line ****************
 
 void EwiseSetitem(const MetalArray<scalar_t>& a, MetalArray<scalar_t>* out,
-                  std::vector<uint32_t> shape, std::vector<uint32_t> strides,
+                  std::vector<int32_t> shape, std::vector<int32_t> strides,
                   size_t offset) {
   BEGIN_COMPUTE_COMMAND("EwiseSetitemKernel")
    command_encoder->setBuffer(a.buffer, 0, 0);
   command_encoder->setBuffer(out->buffer, 0, 1);
 
-  MetalArray<uint32_t> shape_arr = VecToMetal<uint32_t>(shape);
+  MetalArray<int32_t> shape_arr = VecToMetal<int32_t>(shape);
   command_encoder->setBuffer(shape_arr.buffer, 0, 2);
 
-  MetalArray<uint32_t> strides_arr = VecToMetal<uint32_t>(strides);
+  MetalArray<int32_t> strides_arr = VecToMetal<int32_t>(strides);
   command_encoder->setBuffer(strides_arr.buffer, 0, 3);
 
   MetalArray<size_t> dim_arr = VecToMetal<size_t>(std::vector<size_t>{shape.size()});
@@ -253,7 +253,7 @@ void EwiseSetitem(const MetalArray<scalar_t>& a, MetalArray<scalar_t>* out,
 }
 
 void ScalarSetitem(size_t size, scalar_t val, MetalArray<scalar_t>* out,
-                   std::vector<uint32_t> shape, std::vector<uint32_t> strides,
+                   std::vector<int32_t> shape, std::vector<int32_t> strides,
                    size_t offset) {
   BEGIN_COMPUTE_COMMAND("ScalarSetitemKernel")
 
@@ -262,10 +262,10 @@ void ScalarSetitem(size_t size, scalar_t val, MetalArray<scalar_t>* out,
 
   command_encoder->setBuffer(out->buffer, 0, 1);
 
-  MetalArray<uint32_t> shape_arr = VecToMetal<uint32_t>(shape);
+  MetalArray<int32_t> shape_arr = VecToMetal<int32_t>(shape);
   command_encoder->setBuffer(shape_arr.buffer, 0, 2);
 
-  MetalArray<uint32_t> strides_arr = VecToMetal<uint32_t>(strides);
+  MetalArray<int32_t> strides_arr = VecToMetal<int32_t>(strides);
   command_encoder->setBuffer(strides_arr.buffer, 0, 3);
 
   MetalArray<size_t> dim_arr = VecToMetal<size_t>(std::vector<size_t>{shape.size()});

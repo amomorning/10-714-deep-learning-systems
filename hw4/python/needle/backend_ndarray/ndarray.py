@@ -601,7 +601,16 @@ class NDArray:
         Note: compact() before returning.
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_strides = list(self.strides)
+        new_offset = self._offset
+
+        for i in axes:
+            new_offset += new_strides[i] * (self.shape[i] - 1)
+            new_strides[i] = -new_strides[i]
+        
+        return NDArray.make(self._shape, new_strides, self._device, self._handle, new_offset).compact()
+            
+        # raise NotImplementedError()
         ### END YOUR SOLUTION
 
 
@@ -612,7 +621,16 @@ class NDArray:
         axes = ( (0, 0), (1, 1), (0, 0)) pads the middle axis with a 0 on the left and right side.
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_shape, index = [], []
+        old_shape = self.shape
+        for dim, (left, right) in zip(old_shape, axes):
+            new_shape.append(dim + left + right)
+            index.append(slice(left, left+dim, 1))
+        
+        new_array = NDArray.make(new_shape, device=self.device)
+        new_array.fill(0)
+        new_array[tuple(index)] = self
+        return new_array
         ### END YOUR SOLUTION
 
 
