@@ -26,7 +26,7 @@ class SGD(Optimizer):
         ### BEGIN YOUR SOLUTION
         for p in self.params:
             self.u[p] = self.momentum * self.u.get(p, 0) + (1 - self.momentum) * (p.grad + self.weight_decay * p)
-            p.data = ndl.Tensor(p.data - self.lr * self.u[p], dtype=p.data.dtype, requires_grad=False).data
+            p.data = ndl.Tensor(p.data - self.lr * self.u[p], device=p.data.device, dtype=p.data.dtype, requires_grad=False).data
         ### END YOUR SOLUTION
 
     def clip_grad_norm(self, max_norm=0.25):
@@ -72,5 +72,5 @@ class Adam(Optimizer):
             m = self.m[p] / (1-self.beta1 ** self.t)
             self.v[p] = self.beta2 * self.v.get(p, 0) + (1-self.beta2) * (delta ** 2)
             v = self.v[p] / (1-self.beta2 ** self.t)
-            p.data = ndl.Tensor(p.data - self.lr * m / (v ** 0.5 + self.eps), dtype=p.data.dtype, requires_grad=False).data
+            p.data = ndl.Tensor(p.data - self.lr * m / (v ** 0.5 + self.eps),device=p.data.device, dtype=p.data.dtype, requires_grad=False).data
         ### END YOUR SOLUTION

@@ -29,7 +29,23 @@ def epoch_general_cifar10(dataloader, model, loss_fn=nn.SoftmaxLoss(), opt=None)
     """
     np.random.seed(4)
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    if opt:
+        model.train()
+    else:
+        model.eval()
+    tot_acc, tot_loss = 0, 0
+    for X, y in dataloader:
+        logits = model(X)
+        loss = loss_fn(logits, y)
+        tot_loss += loss.detach().numpy() * y.shape[0]
+        y_hat = np.argmax(logits.detach().numpy(), axis=1)
+        tot_acc += np.sum(y_hat == y.numpy())
+        if opt:
+            opt.reset_grad()
+            loss.backward()
+            opt.step()
+    n = len(dataloader.dataset)
+    return tot_acc / n, tot_loss / n
     ### END YOUR SOLUTION
 
 
@@ -53,7 +69,14 @@ def train_cifar10(model, dataloader, n_epochs=1, optimizer=ndl.optim.Adam,
     """
     np.random.seed(4)
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    opt = optimizer(params=model.parameters(), lr=lr, weight_decay=weight_decay)
+    for epoch in range(n_epochs):
+        start_time = time.time()
+        avg_acc, avg_loss = epoch_general_cifar10(dataloader, model,
+                                                  loss_fn=loss_fn(), opt=opt)
+        end_time = time.time()
+        print(f"train {epoch}: {avg_acc=}, {avg_loss=}, time cost:{end_time - start_time}")
+    return avg_acc, avg_loss
     ### END YOUR SOLUTION
 
 
@@ -72,7 +95,10 @@ def evaluate_cifar10(model, dataloader, loss_fn=nn.SoftmaxLoss):
     """
     np.random.seed(4)
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    avg_acc, avg_loss = epoch_general_cifar10(dataloader, model,
+                                              loss_fn=loss_fn(), opt=None)
+    print(f"evaluate: {avg_acc = }, {avg_loss = }")
+    return avg_acc, avg_loss
     ### END YOUR SOLUTION
 
 

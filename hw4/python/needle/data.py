@@ -107,6 +107,8 @@ class DataLoader:
         dataset: Dataset,
         batch_size: Optional[int] = 1,
         shuffle: bool = False,
+        device = nd.cpu(),
+        dtype = "float32"
     ):
 
         self.dataset = dataset
@@ -116,6 +118,8 @@ class DataLoader:
             self.ordering = np.array_split(
                 np.arange(len(dataset)), range(batch_size, len(dataset), batch_size)
             )
+        self.device = device
+        self.dtype = dtype
 
     def __iter__(self):
         ### BEGIN YOUR SOLUTION
@@ -131,7 +135,7 @@ class DataLoader:
     def __next__(self):
         ### BEGIN YOUR SOLUTION
         idx = next(self.ordering)
-        return [Tensor(x) for x in self.dataset[idx]]
+        return [Tensor(x, device=self.device, dtype = self.dtype, require_grad=False) for x in self.dataset[idx]]
         ### END YOUR SOLUTION
 
 
@@ -206,9 +210,6 @@ class CIFAR10Dataset(Dataset):
         Image should be of shape (3, 32, 32)
         """
         ### BEGIN YOUR SOLUTION
-        print(index)
-        print(type(index))
-        print(self.y[index])
         return self.apply_transforms(self.X[index]), self.y[index]
         ### END YOUR SOLUTION
 
