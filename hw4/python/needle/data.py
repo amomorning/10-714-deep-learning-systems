@@ -233,10 +233,6 @@ class NDArrayDataset(Dataset):
         return tuple([a[i] for a in self.arrays])
 
 
-
-
-
-
 class Dictionary(object):
     """
     Creates a dictionary from a list of words, mapping each word to a
@@ -258,7 +254,11 @@ class Dictionary(object):
         Returns the word's unique ID.
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if word not in self.word2idx: 
+            idx = len(self.idx2word)
+            self.word2idx[word] = idx
+            self.idx2word.append(word)
+        return self.word2idx[word]
         ### END YOUR SOLUTION
 
     def __len__(self):
@@ -266,7 +266,7 @@ class Dictionary(object):
         Returns the number of unique words in the dictionary.
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return len(self.idx2word)
         ### END YOUR SOLUTION
 
 
@@ -293,7 +293,17 @@ class Corpus(object):
         ids: List of ids
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        with open(path, 'r') as f:
+            lines = f.readlines()
+        if max_lines and len(lines) > max_lines:
+            lines = lines[:max_lines]
+        lines = [line + '<eos>' for line in lines]
+
+        ids = []
+        for line in lines:
+            for word in line.split():
+                ids.append(self.dictionary.add_word(word))
+        return ids
         ### END YOUR SOLUTION
 
 
@@ -314,7 +324,9 @@ def batchify(data, batch_size, device, dtype):
     Returns the data as a numpy array of shape (nbatch, batch_size).
     """
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    nbatch = len(data) // batch_size
+    data = np.array(data[0:nbatch * batch_size], dtype=dtype)
+    return data.reshape((batch_size, nbatch)).transpose((1, 0))
     ### END YOUR SOLUTION
 
 
@@ -338,5 +350,12 @@ def get_batch(batches, i, bptt, device=None, dtype=None):
     target - Tensor of shape (bptt*bs,) with cached data as NDArray
     """
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    _, batch_size = batches.shape
+    data = batches[i:i+bptt, :].copy()
+    data.resize(bptt, batch_size)
+    target = batches[i+1:i+1+bptt, :].copy()
+    target.resize(bptt * batch_size,)
+    data = Tensor(data, device=device, dtype=dtype, requires_grad=False)
+    target = Tensor(target, device=device, dtype=dtype, requires_grad=False)
+    return data, target
     ### END YOUR SOLUTION
