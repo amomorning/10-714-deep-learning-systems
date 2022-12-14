@@ -322,7 +322,15 @@ class RNNCell(Module):
         """
         super().__init__()
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+
+        I, H= input_size, hidden_size
+        alpha = (1./H) ** 0.5
+        self.W_ih = Parameter(init.rand(I, H, low=-alpha, high=alpha, device=device, dtype=dtype))
+        self.W_hh = Parameter(init.rand(H, H, low=-alpha, high=alpha, device=device, dtype=dtype))
+        self.bias_ih = Parameter(init.rand(H, low=-alpha, high=alpha, device=device, dtype=dtype)) if bias else None
+        self.bias_hh = Parameter(init.rand(H, low=-alpha, high=alpha, device=device, dtype=dtype)) if bias else None
+
+        self.activation = ops.tanh if nonlinearity == 'tanh' else ops.relu
         ### END YOUR SOLUTION
 
     def forward(self, X, h=None):
@@ -337,7 +345,14 @@ class RNNCell(Module):
             for each element in the batch.
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        H = self.W_hh.shape[0]
+        out = X @ self.W_ih
+        if h:
+            out += h @ self.W_hh
+        if self.bias_ih:
+            out += (self.bias_ih + self.bias_hh).reshape((1, H)).broadcast_to(out.shape)
+
+        return self.activation(out)
         ### END YOUR SOLUTION
 
 
@@ -366,7 +381,11 @@ class RNN(Module):
         """
         super().__init__()
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.rnn_cells = [RNNCell(input_size, hidden_size, bias, nonlinearity, device, dtype)]
+        for _ in range(1, num_layers):
+            self.rnn_cells.append(RNNCell (hidden_size, hidden_size, bias, nonlinearity, device, dtype))
         ### END YOUR SOLUTION
 
     def forward(self, X, h0=None):
@@ -382,7 +401,26 @@ class RNN(Module):
         h_n of shape (num_layers, bs, hidden_size) containing the final hidden state for each element in the batch.
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        T, bs, I = X.shape
+        L, H = self.num_layers, self.hidden_size
+
+        if h0 == None:
+            h = [None] * L
+        else:
+            h0 = ops.split(h0, 0)
+            h = [ops.tuple_get_item(h0, i).reshape((bs, H)) for i in range(L)]
+
+        x = ops.split(X, 0)
+        Y = []
+        for t in range(T):
+            y = ops.tuple_get_item(x, t).reshape((bs, I))
+            for l in range(L):
+                # print(f'{y.shape=}', f'{h[l].shape=}')
+                y = self.rnn_cells[l](y, h[l])
+                h[l] = y
+            Y.append(y)
+    
+        return ops.stack(Y, 0), ops.stack(h, 0)
         ### END YOUR SOLUTION
 
 
