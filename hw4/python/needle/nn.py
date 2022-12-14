@@ -86,9 +86,9 @@ class Linear(Module):
         self.out_features = out_features
 
         ### BEGIN YOUR SOLUTION
-        self.weight = Parameter(init.kaiming_uniform(in_features, out_features, device=device, dtype=dtype))
+        self.weight = Parameter(init.kaiming_uniform(in_features, out_features, device=device, dtype=dtype, requires_grad=True))
         if bias:
-            self.bias = Parameter(init.kaiming_uniform(out_features, 1, device=device, dtype=dtype).transpose())
+            self.bias = Parameter(init.kaiming_uniform(out_features, 1, device=device, dtype=dtype, requires_grad=True).transpose())
         ### END YOUR SOLUTION
 
     def forward(self, X: Tensor) -> Tensor:
@@ -322,13 +322,15 @@ class RNNCell(Module):
         """
         super().__init__()
         ### BEGIN YOUR SOLUTION
+        self.device=device
+        self.dtype=dtype
 
         I, H= input_size, hidden_size
         alpha = (1./H) ** 0.5
-        self.W_ih = Parameter(init.rand(I, H, low=-alpha, high=alpha, device=device, dtype=dtype))
-        self.W_hh = Parameter(init.rand(H, H, low=-alpha, high=alpha, device=device, dtype=dtype))
-        self.bias_ih = Parameter(init.rand(H, low=-alpha, high=alpha, device=device, dtype=dtype)) if bias else None
-        self.bias_hh = Parameter(init.rand(H, low=-alpha, high=alpha, device=device, dtype=dtype)) if bias else None
+        self.W_ih = Parameter(init.rand(I, H, low=-alpha, high=alpha, device=device, dtype=dtype, requires_grad=True))
+        self.W_hh = Parameter(init.rand(H, H, low=-alpha, high=alpha, device=device, dtype=dtype, requires_grad=True))
+        self.bias_ih = Parameter(init.rand(H, low=-alpha, high=alpha, device=device, dtype=dtype, requires_grad=True)) if bias else None
+        self.bias_hh = Parameter(init.rand(H, low=-alpha, high=alpha, device=device, dtype=dtype, requires_grad=True)) if bias else None
 
         self.activation = ops.tanh if nonlinearity == 'tanh' else ops.relu
         ### END YOUR SOLUTION
@@ -345,10 +347,12 @@ class RNNCell(Module):
             for each element in the batch.
         """
         ### BEGIN YOUR SOLUTION
+        bs, _ = X.shape
         H = self.W_hh.shape[0]
         out = X @ self.W_ih
-        if h:
-            out += h @ self.W_hh
+        if h is None:
+            h = init.zeros(bs, H, device=self.device, dtype=self.dtype, requires_grad=True)
+        out += h @ self.W_hh
         if self.bias_ih:
             out += (self.bias_ih + self.bias_hh).reshape((1, H)).broadcast_to(out.shape)
 
@@ -385,7 +389,7 @@ class RNN(Module):
         self.num_layers = num_layers
         self.rnn_cells = [RNNCell(input_size, hidden_size, bias, nonlinearity, device, dtype)]
         for _ in range(1, num_layers):
-            self.rnn_cells.append(RNNCell (hidden_size, hidden_size, bias, nonlinearity, device, dtype))
+            self.rnn_cells.append(RNNCell(hidden_size, hidden_size, bias, nonlinearity, device, dtype))
         ### END YOUR SOLUTION
 
     def forward(self, X, h0=None):
@@ -444,13 +448,14 @@ class LSTMCell(Module):
         """
         super().__init__()
         ### BEGIN YOUR SOLUTION
-        
+        self.device = device
+        self.dtype = dtype
         I, H= input_size, hidden_size
         alpha = (1./H) ** 0.5
-        self.W_ih = Parameter(init.rand(I, 4*H, low=-alpha, high=alpha, device=device, dtype=dtype))
-        self.W_hh = Parameter(init.rand(H, 4*H, low=-alpha, high=alpha, device=device, dtype=dtype))
-        self.bias_ih = Parameter(init.rand(4*H, low=-alpha, high=alpha, device=device, dtype=dtype)) if bias else None
-        self.bias_hh = Parameter(init.rand(4*H, low=-alpha, high=alpha, device=device, dtype=dtype)) if bias else None
+        self.W_ih = Parameter(init.rand(I, 4*H, low=-alpha, high=alpha, device=device, dtype=dtype, requires_grad=True))
+        self.W_hh = Parameter(init.rand(H, 4*H, low=-alpha, high=alpha, device=device, dtype=dtype, requires_grad=True))
+        self.bias_ih = Parameter(init.rand(4*H, low=-alpha, high=alpha, device=device, dtype=dtype, requires_grad=True)) if bias else None
+        self.bias_hh = Parameter(init.rand(4*H, low=-alpha, high=alpha, device=device, dtype=dtype, requires_grad=True)) if bias else None
         ### END YOUR SOLUTION
 
 
@@ -471,11 +476,22 @@ class LSTMCell(Module):
             element in the batch.
         """
         ### BEGIN YOUR SOLUTION
-        H = self.W_hh.shape[0]
+        
+        bs, H = X.shape[0], self.W_hh.shape[0]
         out = X @ self.W_ih
-        if h:
+
+        if h is None:
+            h0 = init.zeros(bs, H, device=self.device, dtype=self.dtype, requires_grad=True)
+            c = init.zeros(bs, H, device=self.device, dtype=self.dtype, requires_grad=True)
+        else:
             h0, c = h
-            out += h0 @ self.W_hh
+            if h0 is None:
+                h0 = init.zeros(bs, H, device=self.device, dtype=self.dtype, requires_grad=True)
+            if c is None:
+                c = init.zeros(bs, H, device=self.device, dtype=self.dtype, requires_grad=True)
+
+        out += h0 @ self.W_hh
+
         if self.bias_ih:
             out += (self.bias_ih + self.bias_hh).reshape((1, 4*H)).broadcast_to(out.shape)
         
@@ -517,6 +533,8 @@ class LSTM(Module):
             of shape (4*hidden_size,).
         """
         ### BEGIN YOUR SOLUTION
+        self.device = device
+        self.dtype = dtype
         self.num_layers = num_layers
         self.hidden_size = hidden_size
         self.lstm_cells = [LSTMCell(input_size if i == 0 else hidden_size, hidden_size, 
@@ -581,7 +599,12 @@ class Embedding(Module):
             initialized from N(0, 1).
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.num_embeddings = num_embeddings
+        self.embedding_dim = embedding_dim
+        self.device = device
+        self.dtype = dtype
+        self.weight = Parameter(init.randn(num_embeddings, embedding_dim, 
+                                mean=0, std=1, device=device, dtype=dtype, requires_grad=True))
         ### END YOUR SOLUTION
 
     def forward(self, x: Tensor) -> Tensor:
@@ -595,5 +618,13 @@ class Embedding(Module):
         output of shape (seq_len, bs, embedding_dim)
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        seq_len, bs = x.shape
+        x_split = ops.split(x, 0)
+        y = []
+        for i in range(seq_len):
+            x_b = ops.tuple_get_item(x_split, i)
+            x_one_hot = init.one_hot(self.num_embeddings, x_b, self.device, self.dtype, requires_grad=False)
+            # print(f"{x_one_hot.shape=}")
+            y.append(x_one_hot @ self.weight)
+        return ops.stack(y, 0)
         ### END YOUR SOLUTION
