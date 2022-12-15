@@ -456,6 +456,9 @@ class LSTMCell(Module):
         self.W_hh = Parameter(init.rand(H, 4*H, low=-alpha, high=alpha, device=device, dtype=dtype, requires_grad=True))
         self.bias_ih = Parameter(init.rand(4*H, low=-alpha, high=alpha, device=device, dtype=dtype, requires_grad=True)) if bias else None
         self.bias_hh = Parameter(init.rand(4*H, low=-alpha, high=alpha, device=device, dtype=dtype, requires_grad=True)) if bias else None
+        
+        self.sigmoid = Sigmoid()
+        self.tanh = Tanh()
         ### END YOUR SOLUTION
 
 
@@ -481,30 +484,25 @@ class LSTMCell(Module):
         out = X @ self.W_ih
 
         if h is None:
-            h0 = init.zeros(bs, H, device=self.device, dtype=self.dtype, requires_grad=True)
-            c = init.zeros(bs, H, device=self.device, dtype=self.dtype, requires_grad=True)
+            h0 = init.zeros(bs, H, device=self.device, dtype=self.dtype, requires_grad=False)
+            c = init.zeros(bs, H, device=self.device, dtype=self.dtype, requires_grad=False)
         else:
             h0, c = h
             if h0 is None:
-                h0 = init.zeros(bs, H, device=self.device, dtype=self.dtype, requires_grad=True)
+                h0 = init.zeros(bs, H, device=self.device, dtype=self.dtype, requires_grad=False)
             if c is None:
-                c = init.zeros(bs, H, device=self.device, dtype=self.dtype, requires_grad=True)
+                c = init.zeros(bs, H, device=self.device, dtype=self.dtype, requires_grad=False)
 
         out += h0 @ self.W_hh
 
         if self.bias_ih:
             out += (self.bias_ih + self.bias_hh).reshape((1, 4*H)).broadcast_to(out.shape)
         
-        out = ops.split(out, axis=1)
-        i = Sigmoid()(ops.stack([ops.tuple_get_item(out, col) for col in range(0, H)], axis=1))
-        f = Sigmoid()(ops.stack([ops.tuple_get_item(out, col) for col in range(H, 2*H)], axis=1))
-        g = Tanh()(ops.stack([ops.tuple_get_item(out, col) for col in range(2*H, 3*H)], axis=1))
-        o = Sigmoid()(ops.stack([ops.tuple_get_item(out, col) for col in range(3*H, 4*H)], axis=1))
+        out = ops.split(out.reshape((bs, 4, H)), axis=1)
+        i, f, g, o = self.sigmoid(out[0]), self.sigmoid(out[1]), self.tanh(out[2]), self.sigmoid(out[3])
 
-        c_out = i*g
-        if h:
-            c_out += f*c
-        h_out = o * ops.tanh(c_out)
+        c_out = f*c + i*g
+        h_out = o * self.tanh(c_out)
         return h_out, c_out
         ### END YOUR SOLUTION
 
