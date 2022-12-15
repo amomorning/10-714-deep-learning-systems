@@ -135,29 +135,27 @@ def epoch_general_ptb(data, model, seq_len=40, loss_fn=nn.SoftmaxLoss(), opt=Non
     nbatch, batch_size = data.shape
     h = None
     
-    for i in range(nbatch):
+    tot_samples, tot_batches = 0, 0
+    for i in range(0, nbatch, seq_len):
         X, y = ndl.data.get_batch(data, i, seq_len, device=device, dtype=dtype)
-        print(f'#{i}/{nbatch}')
         out, h = model(X, h)
-        if h:
-            if isinstance(h, tuple):
-                h0, c0 = h
-                h = (h0.detach() if h0 else None, c0.detach() if c0 else None)
-            else:
-                assert isinstance(h, ndl.Tensor)
-                h = h.detach()
+        if isinstance(h, tuple):
+            h = tuple([h0.data for h0 in list(h)])
+        else:
+            h = h.data
         loss = loss_fn(out, y)
-        tot_loss += loss.detach().numpy().sum() * batch_size
+        tot_loss += loss.detach().numpy()
         y_hat = np.argmax(out.detach().numpy(), axis=1)
-        tot_acc += np.sum(y_hat == y.numpy())
+        tot_acc += np.sum(y_hat == y.numpy()) 
+        tot_samples += y.shape[0]
+        tot_batches += 1
         if opt:
             opt.reset_grad()
             loss.backward()
             if clip:
                 opt.clip_grad_norm(clip)
             opt.step()
-    tot_samples = batch_size * nbatch
-    return tot_acc / tot_samples, tot_loss / tot_samples
+    return tot_acc / tot_samples, tot_loss / tot_batches
     ### END YOUR SOLUTION
 
 

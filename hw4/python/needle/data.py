@@ -350,12 +350,9 @@ def get_batch(batches, i, bptt, device=None, dtype=None):
     target - Tensor of shape (bptt*bs,) with cached data as NDArray
     """
     ### BEGIN YOUR SOLUTION
-    _, batch_size = batches.shape
-    data = batches[i:i+bptt, :].copy()
-    data.resize(bptt, batch_size)
-    target = batches[i+1:i+1+bptt, :].copy()
-    target.resize(bptt * batch_size,)
-    data = Tensor(data, device=device, dtype=dtype, requires_grad=False)
-    target = Tensor(target, device=device, dtype=dtype, requires_grad=False)
+    nbatch, batch_size = batches.shape
+    seq_len = min(bptt, nbatch - 1 - i)
+    data = Tensor(batches[i:i+seq_len], device=device, dtype=dtype, requires_grad=False)
+    target = Tensor(batches[i+1:i+1+seq_len].reshape(seq_len*batch_size), device=device, dtype=dtype, requires_grad=False)
     return data, target
     ### END YOUR SOLUTION
