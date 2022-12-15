@@ -39,3 +39,29 @@ for python just follow the `*.ipynb`
 ``` bash
 # how to connect c++ to python
 ```
+
+## Result
+
+### Summary
+
+![summary](imgs/2022-12-15-01-56-09.png)
+
+### Homework 0
+
+![hw0](imgs/2022-12-15-01-57-13.png)
+
+### Homework 1
+
+![hw1](imgs/2022-12-15-01-57-58.png)
+
+### Homework 2
+
+![hw2](imgs/2022-12-15-01-58-26.png)
+
+### Homework 3
+
+![hw3](imgs/2022-12-15-01-58-48.png)
+
+### Homework 4
+
+![hw4](imgs/2022-12-15-01-59-15.png)
