@@ -91,7 +91,6 @@ endif()
 ### METAL BACKEND ###
 ####################
 message(STATUS "Building metal backend")
-
 add_library(ndarray_backend_metal MODULE src/metal/ndarray_backend_metal.cc)
 target_include_directories(ndarray_backend_metal PUBLIC ../third_party/metal-cpp)
 
