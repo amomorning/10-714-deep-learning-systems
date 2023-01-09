@@ -139,6 +139,7 @@ sensitive_info.py
 test.py
 
 
+MakeFile
 CMakeFiles
 CMakeCache.txt
 cmake_install.cmake
